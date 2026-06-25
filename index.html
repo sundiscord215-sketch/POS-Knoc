@@ -921,6 +921,13 @@
         <div class="settings-section-title">โซนอันตราย</div>
         <div class="settings-row" style="border-color: rgba(248,113,113,.3);">
           <div class="settings-row-info">
+            <div class="settings-row-title" style="color:var(--danger)">ล้างยอดขาย</div>
+            <div class="settings-row-desc">ลบประวัติการขายทั้งหมด สินค้า/วัตถุดิบ/เจ้าของยังอยู่</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearSalesData()">ล้าง</button>
+        </div>
+        <div class="settings-row" style="border-color: rgba(248,113,113,.3);">
+          <div class="settings-row-info">
             <div class="settings-row-title" style="color:var(--danger)">ล้างข้อมูลทั้งหมด</div>
             <div class="settings-row-desc">ลบข้อมูลทุกอย่างออกจากเครื่อง ไม่สามารถกู้คืนได้</div>
           </div>
@@ -2107,7 +2114,11 @@ async function importData(e) {
     showToast('❌ Import ล้มเหลว: ' + err.message);
   }
 }
-
+async function clearSalesData() {
+  if (!confirm('ล้างยอดขายทั้งหมด?\nสินค้า วัตถุดิบ และเจ้าของยังคงอยู่')) return;
+  await dbClear('saleItems');
+  showToast('🗑️ ล้างยอดขายแล้ว');
+}
 async function clearAllData() {
   if (!confirm('ลบข้อมูลทั้งหมด?\nการดำเนินการนี้ไม่สามารถกู้คืนได้')) return;
   if (!confirm('ยืนยันอีกครั้ง: ลบข้อมูลทุกอย่างออกจากเครื่อง?')) return;
