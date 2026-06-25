@@ -479,7 +479,199 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-
+  /* ── POS ── */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .pos-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: border-color .15s, opacity .15s;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pos-item:active { opacity: .7; }
+  .pos-item.in-cart { border-color: var(--accent); }
+  .pos-item.out-of-stock {
+    opacity: .4;
+    cursor: not-allowed;
+    filter: grayscale(1);
+  }
+  .pos-item-img {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .pos-item-img img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-sm); }
+  .pos-item-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.3;
+    width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .pos-item-price {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .pos-item-stock {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .pos-cart-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--accent);
+    color: #0f0f0f;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* ── CART ── */
+  .cart-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .cart-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .cart-item {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .cart-item-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cart-item-owner {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .cart-qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cart-qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .cart-qty-btn:active { opacity: .7; }
+  .cart-qty-num {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+  .cart-item-total {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 56px;
+    text-align: right;
+  }
+  /* ── CART FOOTER ── */
+  .cart-footer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .cart-total-label { font-size: 14px; color: var(--text-dim); }
+  .cart-total-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .pos-owner-filter {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .owner-filter-btn {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .owner-filter-btn.active {
+    background: var(--surface);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
   /* ── PAGE: SETTINGS (export/import) ── */
   .settings-section {
     margin-bottom: 24px;
@@ -567,12 +759,29 @@
       <div id="prod-list"></div>
     </div>
 
-    <!-- PAGE: POS (Phase 3) -->
+   <!-- PAGE: POS -->
     <div class="page" id="page-pos">
-      <div class="empty">
-        <div class="empty-icon">🛒</div>
-        <div class="empty-title">หน้าขาย (POS)</div>
-        <div class="empty-desc">จะเพิ่มใน Phase 3</div>
+      <!-- owner filter -->
+      <div class="pos-owner-filter" id="pos-owner-filter"></div>
+      <!-- product grid -->
+      <div class="pos-grid" id="pos-grid"></div>
+      <!-- cart -->
+      <div class="cart-section" id="cart-section" style="display:none;">
+        <div class="cart-header">
+          <span class="cart-title">🛒 ตะกร้า</span>
+          <button class="btn btn-sm" style="color:var(--danger);background:transparent;" onclick="clearCart()">ล้างตะกร้า</button>
+        </div>
+        <div id="cart-items"></div>
+      </div>
+      <!-- cart footer -->
+      <div class="cart-footer" id="cart-footer" style="display:none;">
+        <div class="cart-total-row">
+          <span class="cart-total-label">ยอดรวม</span>
+          <span class="cart-total-amount" id="cart-total">฿0</span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:16px;padding:14px;" onclick="checkout()">
+          ✅ ชำระเงิน / จบบิล
+        </button>
       </div>
     </div>
 
@@ -925,6 +1134,10 @@ function switchTab(pageId, title, btn) {
   document.getElementById('page-' + pageId).classList.add('active');
   btn.classList.add('active');
   document.getElementById('topnav-title').textContent = title;
+  if (pageId === 'pos') {
+    renderOwnerFilter();
+    renderPOSGrid();
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1448,6 +1661,185 @@ async function deleteProduct(id) {
   loadProducts();
 }  
 // ══════════════════════════════════════════
+//  POS
+// ══════════════════════════════════════════
+let cart = {}; // { productId: qty }
+let posOwnerFilter = 'all';
+
+function initPOS() {
+  renderOwnerFilter();
+  renderPOSGrid();
+}
+
+function renderOwnerFilter() {
+  const wrap = document.getElementById('pos-owner-filter');
+  wrap.innerHTML = `
+    <button class="owner-filter-btn ${posOwnerFilter === 'all' ? 'active' : ''}"
+      onclick="setPosFilter('all')">ทั้งหมด</button>
+    ${owners.map(o => `
+      <button class="owner-filter-btn ${posOwnerFilter === o.id ? 'active' : ''}"
+        onclick="setPosFilter('${o.id}')"
+        style="${posOwnerFilter === o.id ? `border-color:${o.color};color:${o.color};` : ''}">
+        <span style="width:8px;height:8px;border-radius:50%;background:${o.color};display:inline-block;"></span>
+        ${escHtml(o.name)}
+      </button>
+    `).join('')}`;
+}
+
+function setPosFilter(ownerId) {
+  posOwnerFilter = ownerId;
+  renderOwnerFilter();
+  renderPOSGrid();
+}
+
+function renderPOSGrid() {
+  const grid = document.getElementById('pos-grid');
+  const filtered = posOwnerFilter === 'all'
+    ? products
+    : products.filter(p => p.ownerId === posOwnerFilter);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
+      <div class="empty-icon">📦</div>
+      <div class="empty-title">ไม่มีสินค้า</div>
+      <div class="empty-desc">เพิ่มสินค้าในแท็บสินค้าก่อนครับ</div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => {
+    const inCart = cart[p.id] || 0;
+    const outOfStock = p.stockQty <= 0;
+    return `
+    <div class="pos-item ${inCart > 0 ? 'in-cart' : ''} ${outOfStock ? 'out-of-stock' : ''}"
+      onclick="${outOfStock ? '' : `addToCart('${p.id}')`}">
+      ${inCart > 0 ? `<div class="pos-cart-badge">${inCart}</div>` : ''}
+      <div class="pos-item-img">
+        ${p.image ? `<img src="${p.image}" alt="${escHtml(p.name)}">` : '📦'}
+      </div>
+      <div class="pos-item-name">${escHtml(p.name)}</div>
+      <div class="pos-item-price">${fmt(p.sellPrice)} ฿</div>
+      <div class="pos-item-stock">${outOfStock ? 'หมด' : 'เหลือ ' + p.stockQty}</div>
+    </div>`;
+  }).join('');
+}
+
+function addToCart(productId) {
+  const p = products.find(x => x.id === productId);
+  if (!p || p.stockQty <= 0) return;
+  const inCart = cart[productId] || 0;
+  if (inCart >= p.stockQty) {
+    showToast('⚠️ สต็อกไม่พอ');
+    return;
+  }
+  cart[productId] = inCart + 1;
+  // ตัดสต็อกทันที
+  p.stockQty -= 1;
+  renderPOSGrid();
+  renderCart();
+}
+
+function removeFromCart(productId) {
+  const p = products.find(x => x.id === productId);
+  const inCart = cart[productId] || 0;
+  if (inCart <= 0) return;
+  cart[productId] = inCart - 1;
+  if (p) p.stockQty += 1;
+  if (cart[productId] === 0) delete cart[productId];
+  renderPOSGrid();
+  renderCart();
+}
+
+function renderCart() {
+  const cartSection = document.getElementById('cart-section');
+  const cartFooter  = document.getElementById('cart-footer');
+  const cartItems   = document.getElementById('cart-items');
+  const cartTotal   = document.getElementById('cart-total');
+
+  const entries = Object.entries(cart);
+  if (!entries.length) {
+    cartSection.style.display = 'none';
+    cartFooter.style.display  = 'none';
+    return;
+  }
+
+  cartSection.style.display = '';
+  cartFooter.style.display  = '';
+
+  let total = 0;
+  cartItems.innerHTML = entries.map(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    if (!p) return '';
+    const owner = owners.find(o => o.id === p.ownerId);
+    const lineTotal = p.sellPrice * qty;
+    total += lineTotal;
+    return `
+    <div class="cart-item">
+      <div style="min-width:0;flex:1;">
+        <div class="cart-item-name">${escHtml(p.name)}</div>
+        <div class="cart-item-owner" style="display:flex;align-items:center;gap:4px;">
+          ${owner ? `<span style="width:6px;height:6px;border-radius:50%;background:${owner.color};display:inline-block;"></span>${escHtml(owner.name)}` : ''}
+          · ${fmt(p.sellPrice)} ฿/ชิ้น
+        </div>
+      </div>
+      <div class="cart-qty-ctrl">
+        <button class="cart-qty-btn" onclick="removeFromCart('${pid}')">−</button>
+        <span class="cart-qty-num">${qty}</span>
+        <button class="cart-qty-btn" onclick="addToCart('${pid}')">+</button>
+      </div>
+      <div class="cart-item-total">${fmt(lineTotal)} ฿</div>
+    </div>`;
+  }).join('');
+
+  cartTotal.textContent = '฿' + fmt(total);
+}
+
+function clearCart() {
+  if (!confirm('ล้างตะกร้าและคืนสต็อกทั้งหมด?')) return;
+  // คืนสต็อก
+  Object.entries(cart).forEach(([pid, qty]) => {
+    const p = products.find(x => x.id === pid);
+    if (p) p.stockQty += qty;
+  });
+  cart = {};
+  renderPOSGrid();
+  renderCart();
+}
+
+async function checkout() {
+  const entries = Object.entries(cart);
+  if (!entries.length) return;
+  if (!confirm(`จบบิล ${Object.keys(cart).length} รายการ\nยืนยันการขาย?`)) return;
+
+  const now = new Date().toISOString();
+  const saves = [];
+
+  // บันทึก SaleItem + อัปเดตสต็อกใน DB
+  for (const [pid, qty] of entries) {
+    const p = products.find(x => x.id === pid);
+    if (!p) continue;
+    // freeze ต้นทุน+ราคา ณ ขณะขาย
+    saves.push(dbPut('saleItems', {
+      saleId:            uid(),
+      datetime:          now,
+      productId:         pid,
+      ownerId:           p.ownerId,
+      qty,
+      sellPriceAtSale:   p.sellPrice,
+      costPerUnitAtSale: p.costPerUnit
+    }));
+    // บันทึกสต็อกที่ลดแล้วลง DB
+    saves.push(dbPut('products', { ...p }));
+  }
+
+  await Promise.all(saves);
+  cart = {};
+  await loadProducts();
+  renderPOSGrid();
+  renderCart();
+  showToast('✅ จบบิลแล้ว บันทึกยอดขายเรียบร้อย');
+}  
+// ══════════════════════════════════════════
 //  EXPORT / IMPORT
 // ══════════════════════════════════════════
 async function exportData() {
@@ -1533,8 +1925,8 @@ function escHtml(str) {
 //  Boot
 // ══════════════════════════════════════════
 async function boot() {
-  await initDB();
-await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
+   await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
+  initPOS();
 
   // Service Worker
   if ('serviceWorker' in navigator) {
