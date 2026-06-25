@@ -1919,6 +1919,7 @@ async function checkout() {
     }));
     // บันทึกสต็อกที่ลดแล้วลง DB
     saves.push(dbPut('products', { ...p, stockQty: p.stockQty - qty }));
+      p.stockQty -= qty; 
   }
 
   await Promise.all(saves);
