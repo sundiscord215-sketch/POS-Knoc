@@ -2,91 +2,1109 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>คำนวณต้นทุน</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="POS บูธ">
+<link rel="manifest" href="./manifest.json">
+<title>POS บูธ</title>
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg:        #0f0f0f;
+    --surface:   #1a1a1a;
+    --surface2:  #242424;
+    --border:    #2e2e2e;
+    --accent:    #c8f060;
+    --accent2:   #7dd4fc;
+    --danger:    #f87171;
+    --text:      #f0f0f0;
+    --text-dim:  #888;
+    --text-faint:#444;
+    --radius:    10px;
+    --radius-sm: 6px;
+    --font:      'Sarabun', sans-serif;
+    --nav-h:     56px;
+    --tab-h:     52px;
+  }
+
+  /* ── RESET ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: var(--font); cursor: pointer; border: none; outline: none; }
+  input, select, textarea { font-family: var(--font); outline: none; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  /* ── TOP NAV ── */
+  #topnav {
+    height: var(--nav-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  #topnav .logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  #topnav .page-title {
+    font-size: 15px;
+    color: var(--text-dim);
+    flex: 1;
+  }
+
+  /* ── BOTTOM TAB BAR ── */
+  #tabbar {
+    height: var(--tab-h);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 10px;
+    transition: color .15s;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .tab-btn svg { width: 22px; height: 22px; }
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn:active { opacity: .7; }
+
+  /* ── PAGES ── */
+  #pages {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .page {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    display: none;
+  }
+  .page.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .count-badge {
+    font-size: 12px;
+    color: var(--text-dim);
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* ── BTN ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity .15s;
+  }
+  .btn:active { opacity: .7; }
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f0f;
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .btn-icon {
+    padding: 8px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-icon:active { opacity: .7; }
+  .btn-icon svg { width: 18px; height: 18px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .card-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .card-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── CHIP / TAG ── */
+  .chip {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .chip-green { background: rgba(200,240,96,.15); color: var(--accent); }
+  .chip-blue  { background: rgba(125,212,252,.15); color: var(--accent2); }
+
+  /* ── FORM ── */
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 15px;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-faint); }
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 4px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── READONLY DISPLAY ── */
+  .calc-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .calc-label { font-size: 12px; color: var(--text-dim); }
+  .calc-value { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius) var(--radius) 0 0;
+    width: 100%;
+    max-width: 540px;
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding: 20px 16px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+    transform: translateY(100%);
+    transition: transform .25s cubic-bezier(.32,0,.67,0);
+  }
+  .modal-backdrop.open .modal {
+    transform: translateY(0);
+  }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--text);
+  }
+  .modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-dim);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .empty-desc { font-size: 13px; color: var(--text-dim); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: calc(var(--tab-h) + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  /* ── OWNER COLOR DOT ── */
+  .owner-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── PAGE: SETTINGS (export/import) ── */
+  .settings-section {
+    margin-bottom: 24px;
+  }
+  .settings-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .settings-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .settings-row-info .settings-row-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .settings-row-info .settings-row-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+<div id="app">
 
-  <header class="topbar">
-    <span class="dot dot-accent"></span>
-    <h1>คำนวณต้นทุน</h1>
-  </header>
-
-  <main class="content">
-
-    <!-- เฟส 1: คลังวัตถุดิบ -->
-    <section id="page-materials" class="page active">
-      <h2>เพิ่มวัตถุดิบ</h2>
-      <form id="material-form" class="card">
-        <label for="mat-name">ชื่อวัตถุดิบ</label>
-        <input list="material-names" id="mat-name" placeholder="เช่น ลูกปัด1" required>
-        <datalist id="material-names"></datalist>
-
-        <div class="form-row">
-          <div class="form-col">
-            <label for="mat-price">ราคาที่ซื้อรวม (บาท)</label>
-            <input type="number" id="mat-price" min="0" step="0.01" placeholder="50" required>
-          </div>
-          <div class="form-col">
-            <label for="mat-qty">จำนวนที่ได้</label>
-            <input type="number" id="mat-qty" min="0.001" step="0.001" placeholder="25" required>
-          </div>
-        </div>
-
-        <label for="mat-unit">หน่วย</label>
-        <input id="mat-unit" placeholder="ชิ้น" value="ชิ้น">
-
-        <p id="mat-preview" class="preview"></p>
-        <p id="mat-error" class="error-text"></p>
-
-        <button type="submit">บันทึก</button>
-      </form>
-
-      <h2>รายการวัตถุดิบ</h2>
-      <div id="materials-list"></div>
-    </section>
-
-    <!-- เฟสถัดไป -->
-    <section id="page-products" class="page placeholder">
-      <div class="coming-soon">
-        <p>หน้าสูตรต้นทุนสินค้า</p>
-        <p class="muted">จะมาในเฟสถัดไป</p>
-      </div>
-    </section>
-
-    <section id="page-production" class="page placeholder">
-      <div class="coming-soon">
-        <p>หน้าผลิต / สต๊อก</p>
-        <p class="muted">จะมาในเฟสถัดไป</p>
-      </div>
-    </section>
-
-    <section id="page-pos" class="page placeholder">
-      <div class="coming-soon">
-        <p>หน้าขาย (POS)</p>
-        <p class="muted">จะมาในเฟสถัดไป</p>
-      </div>
-    </section>
-
-    <section id="page-summary" class="page placeholder">
-      <div class="coming-soon">
-        <p>หน้าสรุปยอดตามเจ้าของ</p>
-        <p class="muted">จะมาในเฟสถัดไป</p>
-      </div>
-    </section>
-
-  </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-page="materials"><span class="dot dot-accent"></span>วัตถุดิบ</button>
-    <button class="nav-item" data-page="products"><span class="dot dot-muted"></span>สูตรสินค้า</button>
-    <button class="nav-item" data-page="production"><span class="dot dot-muted"></span>ผลิต</button>
-    <button class="nav-item" data-page="pos"><span class="dot dot-muted"></span>ขาย</button>
-    <button class="nav-item" data-page="summary"><span class="dot dot-muted"></span>สรุป</button>
+  <!-- TOP NAV -->
+  <nav id="topnav">
+    <span class="logo">บูธ●POS</span>
+    <span class="page-title" id="topnav-title">วัตถุดิบ</span>
   </nav>
 
-  <script src="db.js"></script>
-  <script src="app.js"></script>
+  <!-- PAGES -->
+  <div id="pages">
+
+    <!-- PAGE: RAW MATERIALS -->
+    <div class="page active" id="page-materials">
+      <div class="section-header">
+        <span class="section-title">วัตถุดิบ</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="count-badge" id="mat-count">0 รายการ</span>
+          <button class="btn btn-primary btn-sm" onclick="openMaterialModal()">
+            + เพิ่ม
+          </button>
+        </div>
+      </div>
+      <div id="mat-list"></div>
+    </div>
+
+    <!-- PAGE: OWNERS -->
+    <div class="page" id="page-owners">
+      <div class="section-header">
+        <span class="section-title">เจ้าของ / ผู้ฝากขาย</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="count-badge" id="owner-count">0 คน</span>
+          <button class="btn btn-primary btn-sm" onclick="openOwnerModal()">
+            + เพิ่ม
+          </button>
+        </div>
+      </div>
+      <div id="owner-list"></div>
+    </div>
+
+    <!-- PAGE: PRODUCTS (Phase 2) -->
+    <div class="page" id="page-products">
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">สินค้า</div>
+        <div class="empty-desc">จะเพิ่มใน Phase 2</div>
+      </div>
+    </div>
+
+    <!-- PAGE: POS (Phase 3) -->
+    <div class="page" id="page-pos">
+      <div class="empty">
+        <div class="empty-icon">🛒</div>
+        <div class="empty-title">หน้าขาย (POS)</div>
+        <div class="empty-desc">จะเพิ่มใน Phase 3</div>
+      </div>
+    </div>
+
+    <!-- PAGE: SUMMARY (Phase 4) -->
+    <div class="page" id="page-summary">
+      <div class="empty">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">สรุปยอด</div>
+        <div class="empty-desc">จะเพิ่มใน Phase 4</div>
+      </div>
+    </div>
+
+    <!-- PAGE: SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="settings-section">
+        <div class="settings-section-title">สำรองข้อมูล</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Export ข้อมูล</div>
+            <div class="settings-row-desc">ดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์ .json</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportData()">Export</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Import ข้อมูล</div>
+            <div class="settings-row-desc">โหลดไฟล์ .json กลับเข้าระบบ (ข้อมูลเดิมจะถูกแทนที่)</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="triggerImport()">Import</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">ข้อมูลระบบ</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">เวอร์ชัน</div>
+            <div class="settings-row-desc">Phase 1 — วัตถุดิบ + เจ้าของ</div>
+          </div>
+          <span class="chip chip-green">v0.1</span>
+        </div>
+      </div>
+
+      <div class="settings-section" style="margin-top:32px;">
+        <div class="settings-section-title">โซนอันตราย</div>
+        <div class="settings-row" style="border-color: rgba(248,113,113,.3);">
+          <div class="settings-row-info">
+            <div class="settings-row-title" style="color:var(--danger)">ล้างข้อมูลทั้งหมด</div>
+            <div class="settings-row-desc">ลบข้อมูลทุกอย่างออกจากเครื่อง ไม่สามารถกู้คืนได้</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearAllData()">ล้าง</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- BOTTOM TAB BAR -->
+  <nav id="tabbar">
+    <button class="tab-btn active" onclick="switchTab('materials','วัตถุดิบ',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      </svg>
+      วัตถุดิบ
+    </button>
+    <button class="tab-btn" onclick="switchTab('owners','เจ้าของ',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      เจ้าของ
+    </button>
+    <button class="tab-btn" onclick="switchTab('products','สินค้า',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.29 7 12 12 20.71 7"/>
+        <line x1="12" y1="22" x2="12" y2="12"/>
+      </svg>
+      สินค้า
+    </button>
+    <button class="tab-btn" onclick="switchTab('pos','หน้าขาย',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+      </svg>
+      ขาย
+    </button>
+    <button class="tab-btn" onclick="switchTab('summary','สรุปยอด',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      สรุป
+    </button>
+    <button class="tab-btn" onclick="switchTab('settings','ตั้งค่า',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+      ตั้งค่า
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL: RAW MATERIAL -->
+<div class="modal-backdrop" id="modal-material" onclick="handleBackdropClick(event,'modal-material')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="mat-modal-title">เพิ่มวัตถุดิบ</div>
+
+    <input type="hidden" id="mat-edit-id">
+
+    <div class="form-group">
+      <label class="form-label">ชื่อวัตถุดิบ</label>
+      <input class="form-input" id="mat-name" placeholder="เช่น ลูกปัดสีแดง, ด้ายเงิน" type="text">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ราคาที่ซื้อ (บาท)</label>
+        <input class="form-input" id="mat-price" placeholder="0" type="number" min="0" step="0.01" oninput="calcCostPerUnit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">จำนวนที่ได้</label>
+        <input class="form-input" id="mat-qty" placeholder="1" type="number" min="0.001" step="any" oninput="calcCostPerUnit()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">หน่วย (ไม่บังคับ)</label>
+      <input class="form-input" id="mat-unit" placeholder="เช่น ชิ้น, เมตร, กรัม, แพ็ค" type="text">
+    </div>
+
+    <div class="calc-display">
+      <span class="calc-label">ต้นทุน / หน่วย</span>
+      <span class="calc-value" id="mat-cpu-display">— บาท</span>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-material')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMaterial()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OWNER -->
+<div class="modal-backdrop" id="modal-owner" onclick="handleBackdropClick(event,'modal-owner')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="owner-modal-title">เพิ่มเจ้าของ</div>
+
+    <input type="hidden" id="owner-edit-id">
+
+    <div class="form-group">
+      <label class="form-label">ชื่อเจ้าของ / ผู้ฝากขาย</label>
+      <input class="form-input" id="owner-name" placeholder="เช่น นิว, แอน, บอล" type="text">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สี (สำหรับแยกแยะ)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="color-picker">
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-owner')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveOwner()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  IndexedDB Setup
+// ══════════════════════════════════════════
+const DB_NAME = 'pos-booth-db';
+const DB_VERSION = 1;
+let db;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('rawMaterials')) {
+        d.createObjectStore('rawMaterials', { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains('owners')) {
+        d.createObjectStore('owners', { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains('products')) {
+        d.createObjectStore('products', { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains('saleItems')) {
+        const s = d.createObjectStore('saleItems', { keyPath: 'saleId' });
+        s.createIndex('byOwner', 'ownerId');
+        s.createIndex('byProduct', 'productId');
+        s.createIndex('byDatetime', 'datetime');
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function tx(store, mode = 'readonly') {
+  return db.transaction(store, mode).objectStore(store);
+}
+
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const req = tx(store).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbPut(store, obj) {
+  return new Promise((res, rej) => {
+    const req = tx(store, 'readwrite').put(obj);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbDelete(store, id) {
+  return new Promise((res, rej) => {
+    const req = tx(store, 'readwrite').delete(id);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbClear(store) {
+  return new Promise((res, rej) => {
+    const req = tx(store, 'readwrite').clear();
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+// ══════════════════════════════════════════
+//  Utilities
+// ══════════════════════════════════════════
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function fmt(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function showToast(msg, duration = 2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ══════════════════════════════════════════
+//  Navigation
+// ══════════════════════════════════════════
+function switchTab(pageId, title, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('topnav-title').textContent = title;
+}
+
+// ══════════════════════════════════════════
+//  Modal helpers
+// ══════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function handleBackdropClick(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+// ══════════════════════════════════════════
+//  Owner color palette
+// ══════════════════════════════════════════
+const OWNER_COLORS = [
+  '#c8f060','#7dd4fc','#f9a8d4','#fcd34d','#a78bfa',
+  '#6ee7b7','#fb923c','#e879f9','#94a3b8','#f87171'
+];
+let selectedColor = OWNER_COLORS[0];
+
+function renderColorPicker(currentColor) {
+  selectedColor = currentColor || OWNER_COLORS[0];
+  const wrap = document.getElementById('color-picker');
+  wrap.innerHTML = OWNER_COLORS.map(c => `
+    <div onclick="selectColor('${c}')"
+      style="width:28px;height:28px;border-radius:50%;background:${c};
+      cursor:pointer;border:3px solid ${c === selectedColor ? '#fff' : 'transparent'};
+      transition:border-color .15s;"
+      id="color-dot-${c.slice(1)}">
+    </div>
+  `).join('');
+}
+
+function selectColor(c) {
+  selectedColor = c;
+  document.querySelectorAll('#color-picker > div').forEach(d => {
+    d.style.borderColor = 'transparent';
+  });
+  const el = document.getElementById('color-dot-' + c.slice(1));
+  if (el) el.style.borderColor = '#fff';
+}
+
+// ══════════════════════════════════════════
+//  RAW MATERIALS
+// ══════════════════════════════════════════
+let materials = [];
+
+async function loadMaterials() {
+  materials = await dbGetAll('rawMaterials');
+  materials.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  renderMaterials();
+}
+
+function renderMaterials() {
+  const list = document.getElementById('mat-list');
+  document.getElementById('mat-count').textContent = materials.length + ' รายการ';
+
+  if (!materials.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🧪</div>
+        <div class="empty-title">ยังไม่มีวัตถุดิบ</div>
+        <div class="empty-desc">กด + เพิ่ม เพื่อเพิ่มวัตถุดิบชิ้นแรก</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = materials.map(m => {
+    const cpu = m.purchasePrice / m.purchaseQty;
+    return `
+    <div class="card">
+      <div class="card-row">
+        <div class="card-body">
+          <div class="card-name">${escHtml(m.name)}</div>
+          <div class="card-sub">${fmt(m.purchasePrice)} บาท ÷ ${fmt(m.purchaseQty)}${m.unit ? ' ' + escHtml(m.unit) : ''}</div>
+        </div>
+        <div class="card-actions">
+          <div style="text-align:right;margin-right:6px;">
+            <div style="font-size:11px;color:var(--text-dim);">ต้นทุน/หน่วย</div>
+            <div style="font-size:16px;font-weight:700;color:var(--accent);">${fmt(cpu)} ฿</div>
+          </div>
+          <button class="btn-icon" onclick="editMaterial('${m.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="deleteMaterial('${m.id}')" style="color:var(--danger)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openMaterialModal(id) {
+  document.getElementById('mat-edit-id').value = '';
+  document.getElementById('mat-name').value = '';
+  document.getElementById('mat-price').value = '';
+  document.getElementById('mat-qty').value = '';
+  document.getElementById('mat-unit').value = '';
+  document.getElementById('mat-cpu-display').textContent = '— บาท';
+  document.getElementById('mat-modal-title').textContent = 'เพิ่มวัตถุดิบ';
+  openModal('modal-material');
+  setTimeout(() => document.getElementById('mat-name').focus(), 300);
+}
+
+function editMaterial(id) {
+  const m = materials.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('mat-edit-id').value = m.id;
+  document.getElementById('mat-name').value = m.name;
+  document.getElementById('mat-price').value = m.purchasePrice;
+  document.getElementById('mat-qty').value = m.purchaseQty;
+  document.getElementById('mat-unit').value = m.unit || '';
+  document.getElementById('mat-modal-title').textContent = 'แก้ไขวัตถุดิบ';
+  calcCostPerUnit();
+  openModal('modal-material');
+}
+
+function calcCostPerUnit() {
+  const price = parseFloat(document.getElementById('mat-price').value);
+  const qty   = parseFloat(document.getElementById('mat-qty').value);
+  const el    = document.getElementById('mat-cpu-display');
+  if (price > 0 && qty > 0) {
+    el.textContent = fmt(price / qty) + ' บาท';
+  } else {
+    el.textContent = '— บาท';
+  }
+}
+
+async function saveMaterial() {
+  const name  = document.getElementById('mat-name').value.trim();
+  const price = parseFloat(document.getElementById('mat-price').value);
+  const qty   = parseFloat(document.getElementById('mat-qty').value);
+  const unit  = document.getElementById('mat-unit').value.trim();
+
+  if (!name)      return showToast('⚠️ กรุณาใส่ชื่อวัตถุดิบ');
+  if (!(price > 0)) return showToast('⚠️ ราคาต้องมากกว่า 0');
+  if (!(qty > 0))   return showToast('⚠️ จำนวนต้องมากกว่า 0');
+
+  const editId = document.getElementById('mat-edit-id').value;
+  const obj = {
+    id:            editId || uid(),
+    name, purchasePrice: price,
+    purchaseQty:   qty,
+    unit,
+    costPerUnit:   price / qty
+  };
+  await dbPut('rawMaterials', obj);
+  closeModal('modal-material');
+  showToast(editId ? '✅ แก้ไขวัตถุดิบแล้ว' : '✅ เพิ่มวัตถุดิบแล้ว');
+  loadMaterials();
+}
+
+async function deleteMaterial(id) {
+  const m = materials.find(x => x.id === id);
+  if (!confirm(`ลบ "${m.name}" ออกจากคลัง?\n\nหมายเหตุ: สินค้าที่ใช้วัตถุดิบนี้จะยังคงค่าต้นทุนเดิมที่บันทึกไว้`)) return;
+  await dbDelete('rawMaterials', id);
+  showToast('🗑️ ลบวัตถุดิบแล้ว');
+  loadMaterials();
+}
+
+// ══════════════════════════════════════════
+//  OWNERS
+// ══════════════════════════════════════════
+let owners = [];
+
+async function loadOwners() {
+  owners = await dbGetAll('owners');
+  owners.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  renderOwners();
+}
+
+function renderOwners() {
+  const list = document.getElementById('owner-list');
+  document.getElementById('owner-count').textContent = owners.length + ' คน';
+
+  if (!owners.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">👥</div>
+        <div class="empty-title">ยังไม่มีเจ้าของ</div>
+        <div class="empty-desc">กด + เพิ่ม เพื่อเพิ่มผู้ฝากขายคนแรก</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = owners.map(o => `
+    <div class="card">
+      <div class="card-row">
+        <div class="owner-dot" style="background:${o.color};"></div>
+        <div class="card-body">
+          <div class="card-name">${escHtml(o.name)}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" onclick="editOwner('${o.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="deleteOwner('${o.id}')" style="color:var(--danger)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openOwnerModal() {
+  document.getElementById('owner-edit-id').value = '';
+  document.getElementById('owner-name').value = '';
+  document.getElementById('owner-modal-title').textContent = 'เพิ่มเจ้าของ';
+  renderColorPicker(null);
+  openModal('modal-owner');
+  setTimeout(() => document.getElementById('owner-name').focus(), 300);
+}
+
+function editOwner(id) {
+  const o = owners.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('owner-edit-id').value = o.id;
+  document.getElementById('owner-name').value = o.name;
+  document.getElementById('owner-modal-title').textContent = 'แก้ไขเจ้าของ';
+  renderColorPicker(o.color);
+  openModal('modal-owner');
+}
+
+async function saveOwner() {
+  const name = document.getElementById('owner-name').value.trim();
+  if (!name) return showToast('⚠️ กรุณาใส่ชื่อ');
+
+  const editId = document.getElementById('owner-edit-id').value;
+  const obj = {
+    id:    editId || uid(),
+    name,
+    color: selectedColor
+  };
+  await dbPut('owners', obj);
+  closeModal('modal-owner');
+  showToast(editId ? '✅ แก้ไขเจ้าของแล้ว' : '✅ เพิ่มเจ้าของแล้ว');
+  loadOwners();
+}
+
+async function deleteOwner(id) {
+  const o = owners.find(x => x.id === id);
+  if (!confirm(`ลบ "${o.name}" ออกจากระบบ?\n\nหมายเหตุ: สินค้าและประวัติขายของคนนี้จะยังคงอยู่ในระบบ`)) return;
+  await dbDelete('owners', id);
+  showToast('🗑️ ลบเจ้าของแล้ว');
+  loadOwners();
+}
+
+// ══════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════
+async function exportData() {
+  const [mats, owns, prods, sales] = await Promise.all([
+    dbGetAll('rawMaterials'),
+    dbGetAll('owners'),
+    dbGetAll('products'),
+    dbGetAll('saleItems')
+  ]);
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    rawMaterials: mats,
+    owners: owns,
+    products: prods,
+    saleItems: sales
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `pos-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Export เสร็จแล้ว');
+}
+
+function triggerImport() {
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-file').click();
+}
+
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.version || !data.rawMaterials) throw new Error('ไฟล์ไม่ถูกต้อง');
+
+    if (!confirm('Import จะแทนที่ข้อมูลทั้งหมดในเครื่องนี้\nดำเนินการต่อ?')) return;
+
+    await Promise.all([
+      dbClear('rawMaterials'), dbClear('owners'),
+      dbClear('products'),     dbClear('saleItems')
+    ]);
+    await Promise.all([
+      ...data.rawMaterials.map(x => dbPut('rawMaterials', x)),
+      ...data.owners.map(x => dbPut('owners', x)),
+      ...(data.products || []).map(x => dbPut('products', x)),
+      ...(data.saleItems || []).map(x => dbPut('saleItems', x))
+    ]);
+    showToast('✅ Import เสร็จแล้ว');
+    loadMaterials();
+    loadOwners();
+  } catch (err) {
+    showToast('❌ Import ล้มเหลว: ' + err.message);
+  }
+}
+
+async function clearAllData() {
+  if (!confirm('ลบข้อมูลทั้งหมด?\nการดำเนินการนี้ไม่สามารถกู้คืนได้')) return;
+  if (!confirm('ยืนยันอีกครั้ง: ลบข้อมูลทุกอย่างออกจากเครื่อง?')) return;
+  await Promise.all([
+    dbClear('rawMaterials'), dbClear('owners'),
+    dbClear('products'),     dbClear('saleItems')
+  ]);
+  showToast('🗑️ ล้างข้อมูลทั้งหมดแล้ว');
+  loadMaterials();
+  loadOwners();
+}
+
+// ══════════════════════════════════════════
+//  Security: escape HTML
+// ══════════════════════════════════════════
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════
+//  Boot
+// ══════════════════════════════════════════
+async function boot() {
+  await initDB();
+  await Promise.all([loadMaterials(), loadOwners()]);
+
+  // Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+
+boot();
+</script>
 </body>
 </html>
