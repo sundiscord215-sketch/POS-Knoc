@@ -12,16 +12,16 @@
 <style>
   /* ── TOKENS ── */
   :root {
-    --bg:        #0f0f0f;
-    --surface:   #1a1a1a;
-    --surface2:  #242424;
-    --border:    #2e2e2e;
-    --accent:    #c8f060;
-    --accent2:   #7dd4fc;
+    --bg:        #1a0f0a;
+    --surface:   #241710;
+    --surface2:  #2e1e14;
+    --border:    #3d2a1e;
+    --accent:    #80e8c0;
+    --accent2:   #f0a070;
     --danger:    #f87171;
-    --text:      #f0f0f0;
-    --text-dim:  #888;
-    --text-faint:#444;
+    --text:      #f0ece8;
+    --text-dim:  #9a8070;
+    --text-faint:#4a3028;
     --radius:    10px;
     --radius-sm: 6px;
     --font:      'Sarabun', sans-serif;
@@ -780,7 +780,7 @@
 
   <!-- TOP NAV -->
   <nav id="topnav">
-    <span class="logo">บูธ●POS</span>
+    <span class="logo">9-11</span>
     <span class="page-title" id="topnav-title">วัตถุดิบ</span>
   </nav>
 
@@ -847,11 +847,30 @@
           <span class="cart-total-label">ยอดรวม</span>
           <span class="cart-total-amount" id="cart-total">฿0</span>
         </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:16px;padding:14px;" onclick="checkout()">
-          ✅ ชำระเงิน / จบบิล
-        </button>
+        <div class="divider"></div>
+        <div class="form-row" style="margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">รับเงิน (บาท)</label>
+            <input class="form-input" id="received-amount" type="number" min="0" step="1"
+              placeholder="0" inputmode="numeric" pattern="[0-9]*"
+              oninput="calcChange()" style="font-size:20px;font-weight:700;text-align:right;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">เงินทอน</label>
+            <div class="calc-display" style="height:100%;">
+              <span class="calc-value" id="change-display" style="font-size:20px;">—</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:15px;padding:14px;" onclick="setExactAmount()">
+            💵 รับพอดี
+          </button>
+          <button class="btn btn-primary" style="flex:2;justify-content:center;font-size:15px;padding:14px;" onclick="checkout()">
+            ✅ ชำระเงิน
+          </button>
+        </div>
       </div>
-    </div>
 
     <!-- PAGE: SUMMARY -->
     <div class="page" id="page-summary">
@@ -1859,6 +1878,8 @@ function renderCart() {
   if (!entries.length) {
     cartSection.style.display = 'none';
     cartFooter.style.display  = 'none';
+    document.getElementById('received-amount').value = '';
+  document.getElementById('change-display').textContent = '—';
     return;
   }
 
@@ -1892,7 +1913,25 @@ function renderCart() {
 
   cartTotal.textContent = '฿' + fmt(total);
 }
+function calcChange() {
+  const total    = parseFloat(document.getElementById('cart-total').textContent.replace('฿','').replace(/,/g,'')) || 0;
+  const received = parseFloat(document.getElementById('received-amount').value) || 0;
+  const el       = document.getElementById('change-display');
+  if (received <= 0) {
+    el.textContent = '—';
+    el.style.color = 'var(--accent)';
+    return;
+  }
+  const change = received - total;
+  el.textContent = '฿' + fmt(change);
+  el.style.color = change >= 0 ? 'var(--accent)' : 'var(--danger)';
+}
 
+function setExactAmount() {
+  const total = document.getElementById('cart-total').textContent.replace('฿','').replace(/,/g,'');
+  document.getElementById('received-amount').value = total;
+  calcChange();
+}
 function clearCart() {
   if (!confirm('ล้างตะกร้าและคืนสต็อกทั้งหมด?')) return;
   // คืนสต็อก
@@ -1931,11 +1970,13 @@ async function checkout() {
 
   await Promise.all(saves);
   cart = {};
+  document.getElementById('received-amount').value = '';
+  document.getElementById('change-display').textContent = '—';
   await loadProducts();
   renderPOSGrid();
   renderCart();
   showToast('✅ จบบิลแล้ว บันทึกยอดขายเรียบร้อย');
-}  
+} 
 // ══════════════════════════════════════════
 //  SUMMARY
 // ══════════════════════════════════════════
