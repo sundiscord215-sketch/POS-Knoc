@@ -1925,15 +1925,14 @@ function escHtml(str) {
 //  Boot
 // ══════════════════════════════════════════
 async function boot() {
-   await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
+  await initDB();  // ← เพิ่มบรรทัดนี้
+  await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
   initPOS();
 
-  // Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 }
-
 boot();
 </script>
 </body>
