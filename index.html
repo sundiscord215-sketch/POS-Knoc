@@ -683,6 +683,9 @@
 
 </div><!-- /app -->
 
+<!-- MODALS (outside #app to fix stacking context) -->
+<div id="modals"></div>
+
 <!-- TOAST -->
 <div id="toast"></div>
 
@@ -752,7 +755,11 @@
 
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-product')">ยกเลิก</button>
-      <button class="btn btn-primary"  
+       <button class="btn btn-primary" onclick="saveProduct()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: RAW MATERIAL -->
 <div class="modal-backdrop" id="modal-material" onclick="handleBackdropClick(event,'modal-material')">
   <div class="modal">
