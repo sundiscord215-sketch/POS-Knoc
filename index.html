@@ -11,22 +11,16 @@
 <title>POS บูธ</title>
 <style>
   /* ── TOKENS ── */
-  :root {
-    --bg:        #1a0f0a;
-    --surface:   #241710;
-    --surface2:  #2e1e14;
-    --border:    #3d2a1e;
-    --accent:    #80e8c0;
-    --accent2:   #f0a070;
-    --danger:    #f87171;
-    --text:      #f0ece8;
-    --text-dim:  #9a8070;
-    --text-faint:#4a3028;
-    --radius:    10px;
-    --radius-sm: 6px;
-    --font:      'Sarabun', sans-serif;
-    --nav-h:     56px;
-    --tab-h:     52px;
+--bg:        #1c1410;
+--surface:   #2a1f18;
+--surface2:  #342620;
+--border:    #4a3528;
+--accent:    #6ed4a8;
+--accent2:   #e8956a;
+--danger:    #e87070;
+--text:      #ede8e3;
+--text-dim:  #a08878;
+--text-faint:#5a4038;
   }
 
   /* ── RESET ── */
@@ -1946,7 +1940,6 @@ function clearCart() {
 async function checkout() {
   const entries = Object.entries(cart);
   if (!entries.length) return;
-  if (!confirm(`จบบิล ${Object.keys(cart).length} รายการ\nยืนยันการขาย?`)) return;
 
   const now = new Date().toISOString();
   const saves = [];
