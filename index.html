@@ -1709,7 +1709,9 @@ function renderPOSGrid() {
 
   grid.innerHTML = filtered.map(p => {
     const inCart = cart[p.id] || 0;
-    const outOfStock = p.stockQty <= 0;
+    const inCart = cart[p.id] || 0;
+    const remaining = p.stockQty - inCart;
+    const outOfStock = remaining <= 0;
     return `
     <div class="pos-item ${inCart > 0 ? 'in-cart' : ''} ${outOfStock ? 'out-of-stock' : ''}"
       onclick="${outOfStock ? '' : `addToCart('${p.id}')`}">
@@ -1719,7 +1721,7 @@ function renderPOSGrid() {
       </div>
       <div class="pos-item-name">${escHtml(p.name)}</div>
       <div class="pos-item-price">${fmt(p.sellPrice)} ฿</div>
-      <div class="pos-item-stock">${outOfStock ? 'หมด' : 'เหลือ ' + p.stockQty}</div>
+      <div class="pos-item-stock">${outOfStock ? 'หมด' : 'เหลือ ' + remaining}</div>
     </div>`;
   }).join('');
 }
@@ -1733,8 +1735,6 @@ function addToCart(productId) {
     return;
   }
   cart[productId] = inCart + 1;
-  // ตัดสต็อกทันที
-  p.stockQty -= 1;
   renderPOSGrid();
   renderCart();
 }
@@ -1744,7 +1744,6 @@ function removeFromCart(productId) {
   const inCart = cart[productId] || 0;
   if (inCart <= 0) return;
   cart[productId] = inCart - 1;
-  if (p) p.stockQty += 1;
   if (cart[productId] === 0) delete cart[productId];
   renderPOSGrid();
   renderCart();
@@ -1797,10 +1796,7 @@ function renderCart() {
 function clearCart() {
   if (!confirm('ล้างตะกร้าและคืนสต็อกทั้งหมด?')) return;
   // คืนสต็อก
-  Object.entries(cart).forEach(([pid, qty]) => {
-    const p = products.find(x => x.id === pid);
-    if (p) p.stockQty += qty;
-  });
+  
   cart = {};
   renderPOSGrid();
   renderCart();
