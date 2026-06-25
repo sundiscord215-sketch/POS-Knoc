@@ -1918,7 +1918,7 @@ async function checkout() {
       costPerUnitAtSale: p.costPerUnit
     }));
     // บันทึกสต็อกที่ลดแล้วลง DB
-    saves.push(dbPut('products', { ...p }));
+    saves.push(dbPut('products', { ...p, stockQty: p.stockQty - qty }));
   }
 
   await Promise.all(saves);
