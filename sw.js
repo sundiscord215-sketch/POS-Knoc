@@ -1,7 +1,6 @@
 const CACHE_NAME = 'pos-booth-v1';
 const ASSETS = [
-  './index.html',
-  './manifest.json'
+  './index.html'
 ];
 
 self.addEventListener('install', e => {
