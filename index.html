@@ -1709,7 +1709,6 @@ function renderPOSGrid() {
 
   grid.innerHTML = filtered.map(p => {
     const inCart = cart[p.id] || 0;
-    const inCart = cart[p.id] || 0;
     const remaining = p.stockQty - inCart;
     const outOfStock = remaining <= 0;
     return `
