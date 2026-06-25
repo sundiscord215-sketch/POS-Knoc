@@ -672,6 +672,74 @@
     border-color: var(--accent);
     color: var(--accent);
   }
+  /* ── SUMMARY ── */
+  .summary-owner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .summary-owner-header {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .summary-owner-header:active { opacity: .7; }
+  .summary-owner-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .summary-stat {
+    text-align: right;
+  }
+  .summary-stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .summary-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .summary-products {
+    border-top: 1px solid var(--border);
+    display: none;
+  }
+  .summary-products.open { display: block; }
+  .summary-product-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-product-row:last-child { border-bottom: none; }
+  .summary-product-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .summary-product-qty {
+    font-size: 12px;
+    color: var(--text-dim);
+    min-width: 48px;
+    text-align: right;
+  }
+  .summary-product-profit {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 72px;
+    text-align: right;
+  }
   /* ── PAGE: SETTINGS (export/import) ── */
   .settings-section {
     margin-bottom: 24px;
@@ -785,13 +853,36 @@
       </div>
     </div>
 
-    <!-- PAGE: SUMMARY (Phase 4) -->
+    <!-- PAGE: SUMMARY -->
     <div class="page" id="page-summary">
-      <div class="empty">
-        <div class="empty-icon">📊</div>
-        <div class="empty-title">สรุปยอด</div>
-        <div class="empty-desc">จะเพิ่มใน Phase 4</div>
+      <!-- date filter -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="owner-filter-btn active" id="filter-all" onclick="setSummaryFilter('all',this)">ทั้งหมด</button>
+        <button class="owner-filter-btn" id="filter-today" onclick="setSummaryFilter('today',this)">วันนี้</button>
+        <button class="owner-filter-btn" id="filter-week" onclick="setSummaryFilter('week',this)">7 วัน</button>
+        <button class="owner-filter-btn" id="filter-month" onclick="setSummaryFilter('month',this)">30 วัน</button>
       </div>
+      <!-- grand total bar -->
+      <div class="card" style="margin-bottom:14px;background:var(--surface2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="text-align:center;flex:1;">
+            <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px;">ยอดขายรวม</div>
+            <div style="font-size:20px;font-weight:700;color:var(--accent2);" id="sum-total-sales">฿0</div>
+          </div>
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;flex:1;">
+            <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px;">ต้นทุนรวม</div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);" id="sum-total-cost">฿0</div>
+          </div>
+          <div style="width:1px;height:36px;background:var(--border);"></div>
+          <div style="text-align:center;flex:1;">
+            <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px;">กำไรรวม</div>
+            <div style="font-size:20px;font-weight:700;color:var(--accent);" id="sum-total-profit">฿0</div>
+          </div>
+        </div>
+      </div>
+      <!-- owner list -->
+      <div id="summary-list"></div>
     </div>
 
     <!-- PAGE: SETTINGS -->
@@ -1134,9 +1225,12 @@ function switchTab(pageId, title, btn) {
   document.getElementById('page-' + pageId).classList.add('active');
   btn.classList.add('active');
   document.getElementById('topnav-title').textContent = title;
-  if (pageId === 'pos') {
+if (pageId === 'pos') {
     renderOwnerFilter();
     renderPOSGrid();
+  }
+  if (pageId === 'summary') {
+    renderSummary();
   }
 }
 
@@ -1835,6 +1929,123 @@ async function checkout() {
   showToast('✅ จบบิลแล้ว บันทึกยอดขายเรียบร้อย');
 }  
 // ══════════════════════════════════════════
+//  SUMMARY
+// ══════════════════════════════════════════
+let summaryFilter = 'all';
+
+function setSummaryFilter(f, btn) {
+  summaryFilter = f;
+  document.querySelectorAll('#page-summary .owner-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSummary();
+}
+
+function getFilteredSales(sales) {
+  if (summaryFilter === 'all') return sales;
+  const now = new Date();
+  const days = summaryFilter === 'today' ? 0 : summaryFilter === 'week' ? 7 : 30;
+  const cutoff = new Date(now);
+  if (summaryFilter === 'today') {
+    cutoff.setHours(0, 0, 0, 0);
+  } else {
+    cutoff.setDate(now.getDate() - days);
+  }
+  return sales.filter(s => new Date(s.datetime) >= cutoff);
+}
+
+async function renderSummary() {
+  const allSales = await dbGetAll('saleItems');
+  const sales = getFilteredSales(allSales);
+
+  // grand total
+  const grandSales  = sales.reduce((s, x) => s + x.qty * x.sellPriceAtSale, 0);
+  const grandCost   = sales.reduce((s, x) => s + x.qty * x.costPerUnitAtSale, 0);
+  const grandProfit = grandSales - grandCost;
+  document.getElementById('sum-total-sales').textContent  = '฿' + fmt(grandSales);
+  document.getElementById('sum-total-cost').textContent   = '฿' + fmt(grandCost);
+  document.getElementById('sum-total-profit').textContent = '฿' + fmt(grandProfit);
+
+  // group by owner
+  const byOwner = {};
+  sales.forEach(s => {
+    if (!byOwner[s.ownerId]) byOwner[s.ownerId] = {};
+    if (!byOwner[s.ownerId][s.productId]) byOwner[s.ownerId][s.productId] = { qty: 0, sales: 0, cost: 0 };
+    byOwner[s.ownerId][s.productId].qty   += s.qty;
+    byOwner[s.ownerId][s.productId].sales += s.qty * s.sellPriceAtSale;
+    byOwner[s.ownerId][s.productId].cost  += s.qty * s.costPerUnitAtSale;
+  });
+
+  const list = document.getElementById('summary-list');
+
+  if (!Object.keys(byOwner).length) {
+    list.innerHTML = `<div class="empty">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">ยังไม่มียอดขาย</div>
+      <div class="empty-desc">ขายสินค้าผ่านหน้า POS ก่อนครับ</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = Object.entries(byOwner).map(([ownerId, prodMap]) => {
+    const owner = owners.find(o => o.id === ownerId);
+    const ownerName  = owner ? owner.name : ownerId;
+    const ownerColor = owner ? owner.color : '#888';
+
+    const ownerSales  = Object.values(prodMap).reduce((s, x) => s + x.sales, 0);
+    const ownerCost   = Object.values(prodMap).reduce((s, x) => s + x.cost, 0);
+    const ownerProfit = ownerSales - ownerCost;
+    const ownerQty    = Object.values(prodMap).reduce((s, x) => s + x.qty, 0);
+
+    // sort products by qty desc
+    const prodRows = Object.entries(prodMap)
+      .sort((a, b) => b[1].qty - a[1].qty)
+      .map(([productId, d]) => {
+        const prod = products.find(p => p.id === productId);
+        const prodName = prod ? prod.name : productId;
+        return `
+        <div class="summary-product-row">
+          <div class="summary-product-name">${escHtml(prodName)}</div>
+          <div class="summary-product-qty">${d.qty} ชิ้น</div>
+          <div style="text-align:right;min-width:80px;">
+            <div style="font-size:10px;color:var(--text-dim);">กำไร</div>
+            <div class="summary-product-profit">฿${fmt(d.sales - d.cost)}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+    return `
+    <div class="summary-owner-card">
+      <div class="summary-owner-header" onclick="toggleSummaryOwner(this)">
+        <div class="owner-dot" style="background:${ownerColor};width:12px;height:12px;"></div>
+        <div class="summary-owner-name">${escHtml(ownerName)}</div>
+        <div class="summary-stat" style="margin-right:12px;">
+          <div class="summary-stat-label">ขาย</div>
+          <div class="summary-stat-value" style="color:var(--text-dim);">${ownerQty} ชิ้น</div>
+        </div>
+        <div class="summary-stat" style="margin-right:12px;">
+          <div class="summary-stat-label">ยอด</div>
+          <div class="summary-stat-value" style="color:var(--accent2);">฿${fmt(ownerSales)}</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-stat-label">กำไร</div>
+          <div class="summary-stat-value" style="color:var(--accent);">฿${fmt(ownerProfit)}</div>
+        </div>
+        <span style="color:var(--text-faint);margin-left:6px;font-size:18px;">›</span>
+      </div>
+      <div class="summary-products">
+        ${prodRows}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSummaryOwner(header) {
+  const detail = header.nextElementSibling;
+  const arrow  = header.querySelector('span:last-child');
+  const isOpen = detail.classList.toggle('open');
+  arrow.style.transform = isOpen ? 'rotate(90deg)' : '';
+}  
+// ══════════════════════════════════════════
 //  EXPORT / IMPORT
 // ══════════════════════════════════════════
 async function exportData() {
@@ -1888,8 +2099,9 @@ async function importData(e) {
       ...(data.saleItems || []).map(x => dbPut('saleItems', x))
     ]);
     showToast('✅ Import เสร็จแล้ว');
-    loadMaterials();
-    loadOwners();
+    await loadMaterials();
+    await loadOwners();
+    await loadProducts();
   } catch (err) {
     showToast('❌ Import ล้มเหลว: ' + err.message);
   }
