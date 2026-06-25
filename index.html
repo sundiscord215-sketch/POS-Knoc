@@ -364,7 +364,115 @@
     margin: 12px 0;
   }
 
-  /* ── OWNER COLOR DOT ── */
+/* ── PRODUCT CARD ── */
+  .product-img {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+  .product-img-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .stock-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .stock-ok   { background: rgba(200,240,96,.15); color: var(--accent); }
+  .stock-low  { background: rgba(252,211,77,.15);  color: #fcd34d; }
+  .stock-zero { background: rgba(248,113,113,.15); color: var(--danger); }
+
+  /* ── RECIPE BUILDER ── */
+  .recipe-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+  }
+  .recipe-row select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 14px;
+    min-width: 0;
+  }
+  .recipe-row select option { background: var(--surface2); }
+  .recipe-qty {
+    width: 70px;
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--border);
+    padding-left: 8px;
+    color: var(--text);
+    font-size: 14px;
+    text-align: right;
+  }
+  .recipe-unit {
+    font-size: 12px;
+    color: var(--text-dim);
+    min-width: 28px;
+  }
+  .recipe-del {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .add-recipe-btn {
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .add-recipe-btn:active { opacity: .7; }
+
+  /* ── IMAGE UPLOAD ── */
+  .img-upload-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .img-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .img-preview img { width: 100%; height: 100%; object-fit: cover; }
   .owner-dot {
     width: 10px;
     height: 10px;
@@ -447,13 +555,16 @@
       <div id="owner-list"></div>
     </div>
 
-    <!-- PAGE: PRODUCTS (Phase 2) -->
+    <!-- PAGE: PRODUCTS -->
     <div class="page" id="page-products">
-      <div class="empty">
-        <div class="empty-icon">📦</div>
-        <div class="empty-title">สินค้า</div>
-        <div class="empty-desc">จะเพิ่มใน Phase 2</div>
+      <div class="section-header">
+        <span class="section-title">สินค้า</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="count-badge" id="prod-count">0 รายการ</span>
+          <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ เพิ่ม</button>
+        </div>
       </div>
+      <div id="prod-list"></div>
     </div>
 
     <!-- PAGE: POS (Phase 3) -->
@@ -575,6 +686,73 @@
 <!-- TOAST -->
 <div id="toast"></div>
 
+<!-- MODAL: PRODUCT -->
+<div class="modal-backdrop" id="modal-product" onclick="handleBackdropClick(event,'modal-product')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="prod-modal-title">เพิ่มสินค้า</div>
+
+    <input type="hidden" id="prod-edit-id">
+
+    <div class="form-group">
+      <label class="form-label">รูปสินค้า</label>
+      <div class="img-upload-wrap">
+        <div class="img-preview" id="prod-img-preview">📦</div>
+        <div>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('prod-img-input').click()">เลือกรูป</button>
+          <button class="btn btn-sm" style="color:var(--danger);background:transparent;" onclick="clearProductImage()">ลบรูป</button>
+          <div class="form-hint">แนะนำรูปสี่เหลี่ยมจัตุรัส</div>
+        </div>
+      </div>
+      <input type="file" id="prod-img-input" accept="image/*" style="display:none" onchange="handleProductImage(event)">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ชื่อสินค้า</label>
+      <input class="form-input" id="prod-name" placeholder="เช่น กำไลลายดอกไม้" type="text">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">เจ้าของ / ผู้ฝากขาย</label>
+      <select class="form-input" id="prod-owner">
+        <option value="">— เลือกเจ้าของ —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สูตร (วัตถุดิบที่ใช้)</label>
+      <div id="recipe-rows"></div>
+      <button class="add-recipe-btn" onclick="addRecipeRow()">+ เพิ่มวัตถุดิบในสูตร</button>
+    </div>
+
+    <div class="form-group">
+      <div class="calc-display" style="margin-bottom:8px;">
+        <span class="calc-label">ต้นทุน / ชิ้น</span>
+        <span class="calc-value" id="prod-cost-display">0 บาท</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ราคาขาย (บาท)</label>
+        <input class="form-input" id="prod-price" placeholder="0" type="number" min="0" step="0.01" oninput="calcProductProfit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">% กำไร</label>
+        <div class="calc-display" style="height:100%;">
+          <span class="calc-value" id="prod-profit-display" style="font-size:14px;">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สต็อกสำเร็จ (ชิ้น)</label>
+      <input class="form-input" id="prod-stock" placeholder="0" type="number" min="0" step="1">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-product')">ยกเลิก</button>
+      <button class="btn btn-primary"  
 <!-- MODAL: RAW MATERIAL -->
 <div class="modal-backdrop" id="modal-material" onclick="handleBackdropClick(event,'modal-material')">
   <div class="modal">
@@ -1010,6 +1188,259 @@ async function deleteOwner(id) {
 }
 
 // ══════════════════════════════════════════
+//  PRODUCTS
+// ══════════════════════════════════════════
+let products = [];
+let currentRecipe = [];
+let currentProductImage = null;
+
+async function loadProducts() {
+  products = await dbGetAll('products');
+  products.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+  renderProducts();
+}
+
+function renderProducts() {
+  const list = document.getElementById('prod-list');
+  document.getElementById('prod-count').textContent = products.length + ' รายการ';
+
+  if (!products.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">ยังไม่มีสินค้า</div>
+        <div class="empty-desc">กด + เพิ่ม เพื่อเพิ่มสินค้าชิ้นแรก</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = products.map(p => {
+    const owner = owners.find(o => o.id === p.ownerId);
+    const stockClass = p.stockQty <= 0 ? 'stock-zero' : p.stockQty <= 3 ? 'stock-low' : 'stock-ok';
+    const stockLabel = p.stockQty <= 0 ? 'หมด' : p.stockQty + ' ชิ้น';
+    return `
+    <div class="card">
+      <div class="card-row">
+        ${p.image
+          ? `<img class="product-img" src="${p.image}" alt="${escHtml(p.name)}">`
+          : `<div class="product-img-placeholder">📦</div>`}
+        <div class="card-body">
+          <div class="card-name">${escHtml(p.name)}</div>
+          <div class="card-sub" style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+            ${owner ? `<span class="owner-dot" style="background:${owner.color};"></span>${escHtml(owner.name)}` : '—'}
+          </div>
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
+            <span class="chip chip-green">ขาย ${fmt(p.sellPrice)} ฿</span>
+            <span class="chip chip-blue">ต้นทุน ${fmt(p.costPerUnit)} ฿</span>
+            <span class="stock-badge ${stockClass}">${stockLabel}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" onclick="editProduct('${p.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="deleteProduct('${p.id}')" style="color:var(--danger)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openProductModal() {
+  document.getElementById('prod-edit-id').value = '';
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-price').value = '';
+  document.getElementById('prod-stock').value = '';
+  document.getElementById('prod-cost-display').textContent = '0 บาท';
+  document.getElementById('prod-profit-display').textContent = '—';
+  document.getElementById('prod-modal-title').textContent = 'เพิ่มสินค้า';
+  currentRecipe = [];
+  currentProductImage = null;
+  renderProductImagePreview();
+  populateOwnerDropdown();
+  renderRecipeRows();
+  openModal('modal-product');
+  setTimeout(() => document.getElementById('prod-name').focus(), 300);
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('prod-edit-id').value = p.id;
+  document.getElementById('prod-name').value = p.name;
+  document.getElementById('prod-price').value = p.sellPrice;
+  document.getElementById('prod-stock').value = p.stockQty;
+  document.getElementById('prod-modal-title').textContent = 'แก้ไขสินค้า';
+  currentRecipe = JSON.parse(JSON.stringify(p.recipe || []));
+  currentProductImage = p.image || null;
+  renderProductImagePreview();
+  populateOwnerDropdown(p.ownerId);
+  renderRecipeRows();
+  calcProductCost();
+  calcProductProfit();
+  openModal('modal-product');
+}
+
+function populateOwnerDropdown(selectedId) {
+  const sel = document.getElementById('prod-owner');
+  sel.innerHTML = '<option value="">— เลือกเจ้าของ —</option>' +
+    owners.map(o =>
+      `<option value="${o.id}" ${o.id === selectedId ? 'selected' : ''}>${escHtml(o.name)}</option>`
+    ).join('');
+}
+
+// ── Recipe builder ──
+function addRecipeRow(matId, qty) {
+  currentRecipe.push({ rawMaterialId: matId || '', qtyUsed: qty || '' });
+  renderRecipeRows();
+}
+
+function removeRecipeRow(idx) {
+  currentRecipe.splice(idx, 1);
+  renderRecipeRows();
+  calcProductCost();
+}
+
+function renderRecipeRows() {
+  const wrap = document.getElementById('recipe-rows');
+  if (!currentRecipe.length) {
+    wrap.innerHTML = '<div style="font-size:13px;color:var(--text-faint);margin-bottom:8px;">ยังไม่มีวัตถุดิบในสูตร — ต้นทุนจะเป็น 0</div>';
+    return;
+  }
+  wrap.innerHTML = currentRecipe.map((r, i) => {
+    const mat = materials.find(m => m.id === r.rawMaterialId);
+    const unit = mat ? mat.unit || 'หน่วย' : 'หน่วย';
+    return `
+    <div class="recipe-row">
+      <select onchange="updateRecipeMat(${i}, this.value)">
+        <option value="">— เลือกวัตถุดิบ —</option>
+        ${materials.map(m =>
+          `<option value="${m.id}" ${m.id === r.rawMaterialId ? 'selected' : ''}>${escHtml(m.name)}</option>`
+        ).join('')}
+      </select>
+      <input class="recipe-qty" type="number" min="0.001" step="any"
+        placeholder="0" value="${r.qtyUsed}"
+        onchange="updateRecipeQty(${i}, this.value)">
+      <span class="recipe-unit">${escHtml(unit)}</span>
+      <button class="recipe-del" onclick="removeRecipeRow(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function updateRecipeMat(idx, matId) {
+  currentRecipe[idx].rawMaterialId = matId;
+  renderRecipeRows();
+  calcProductCost();
+}
+
+function updateRecipeQty(idx, qty) {
+  currentRecipe[idx].qtyUsed = parseFloat(qty) || 0;
+  calcProductCost();
+}
+
+function calcProductCost() {
+  let cost = 0;
+  currentRecipe.forEach(r => {
+    const mat = materials.find(m => m.id === r.rawMaterialId);
+    if (mat && r.qtyUsed > 0) cost += mat.costPerUnit * r.qtyUsed;
+  });
+  document.getElementById('prod-cost-display').textContent = fmt(cost) + ' บาท';
+  document.getElementById('prod-cost-display').dataset.cost = cost;
+  calcProductProfit();
+  return cost;
+}
+
+function calcProductProfit() {
+  const cost  = parseFloat(document.getElementById('prod-cost-display').dataset.cost) || 0;
+  const price = parseFloat(document.getElementById('prod-price').value) || 0;
+  const el    = document.getElementById('prod-profit-display');
+  if (price > 0 && cost >= 0) {
+    const profit  = price - cost;
+    const pct     = cost > 0 ? (profit / cost) * 100 : null;
+    el.textContent = pct !== null ? fmt(pct) + '%' : '—';
+    el.style.color = profit >= 0 ? 'var(--accent)' : 'var(--danger)';
+  } else {
+    el.textContent = '—';
+    el.style.color = 'var(--accent)';
+  }
+}
+
+// ── Image ──
+function handleProductImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentProductImage = ev.target.result;
+    renderProductImagePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearProductImage() {
+  currentProductImage = null;
+  document.getElementById('prod-img-input').value = '';
+  renderProductImagePreview();
+}
+
+function renderProductImagePreview() {
+  const el = document.getElementById('prod-img-preview');
+  if (currentProductImage) {
+    el.innerHTML = `<img src="${currentProductImage}" alt="preview">`;
+  } else {
+    el.innerHTML = '📦';
+  }
+}
+
+// ── Save / Delete ──
+async function saveProduct() {
+  const name    = document.getElementById('prod-name').value.trim();
+  const ownerId = document.getElementById('prod-owner').value;
+  const price   = parseFloat(document.getElementById('prod-price').value);
+  const stock   = parseInt(document.getElementById('prod-stock').value) || 0;
+
+  if (!name)    return showToast('⚠️ กรุณาใส่ชื่อสินค้า');
+  if (!ownerId) return showToast('⚠️ กรุณาเลือกเจ้าของ');
+  if (!(price >= 0)) return showToast('⚠️ กรุณาใส่ราคาขาย');
+
+  const cost = calcProductCost();
+  const editId = document.getElementById('prod-edit-id').value;
+  const obj = {
+    id:           editId || uid(),
+    name,
+    image:        currentProductImage,
+    ownerId,
+    recipe:       currentRecipe.filter(r => r.rawMaterialId && r.qtyUsed > 0),
+    costPerUnit:  cost,
+    sellPrice:    price,
+    profitPerUnit: price - cost,
+    profitPercent: cost > 0 ? ((price - cost) / cost) * 100 : null,
+    stockQty:     stock
+  };
+  await dbPut('products', obj);
+  closeModal('modal-product');
+  showToast(editId ? '✅ แก้ไขสินค้าแล้ว' : '✅ เพิ่มสินค้าแล้ว');
+  loadProducts();
+}
+
+async function deleteProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!confirm(`ลบ "${p.name}" ออกจากระบบ?`)) return;
+  await dbDelete('products', id);
+  showToast('🗑️ ลบสินค้าแล้ว');
+  loadProducts();
+}  
+// ══════════════════════════════════════════
 //  EXPORT / IMPORT
 // ══════════════════════════════════════════
 async function exportData() {
@@ -1096,7 +1527,7 @@ function escHtml(str) {
 // ══════════════════════════════════════════
 async function boot() {
   await initDB();
-  await Promise.all([loadMaterials(), loadOwners()]);
+await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
 
   // Service Worker
   if ('serviceWorker' in navigator) {
