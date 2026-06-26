@@ -2656,7 +2656,28 @@ function getGachaItemStock(it) {
     const p = products.find(x => x.id === it.refId);
     return p ? p.stockQty : 0;
   }
-  return it.qty > 0 ? it.qty : Infinity;
+  return it.qty > 0 ? it.qty : Infinity; // qty<=0 ของ custom = ไม่จำกัด
+}
+
+// รวมสต็อกที่เหลือทั้งหมดของ rarity หนึ่ง ๆ ในตู้ m (ผลรวมของทุกไอเทมใน rarity นั้น)
+function getRarityStock(m, rarityId) {
+  const items = Array.isArray(m.items) ? m.items : [];
+  return items
+    .filter(it => it.rarityId === rarityId)
+    .reduce((sum, it) => {
+      const s = getGachaItemStock(it);
+      return sum + (s === Infinity ? Infinity : Math.max(0, s));
+    }, 0);
+}
+
+// คืนรายชื่อ rarity ทั้งหมดของตู้ พร้อม flag ว่ามีของเหลือหรือไม่
+function getRarityAvailability(m) {
+  const rarities = Array.isArray(m.rarities) ? m.rarities : [];
+  return rarities.map(r => ({
+    rarity: r,
+    stock: getRarityStock(m, r.id),
+    available: getRarityStock(m, r.id) > 0
+  }));
 }
 
 async function saveGachaMachine() {
@@ -2699,84 +2720,102 @@ function openPullModal(machineId) {
   openModal('modal-gacha-pull');
 }
 
-function pullOne(m) {
-  const total = m.rarities.reduce((s, r) => s + Number(r.pct), 0);
-  if (total <= 0 || !m.items.length) return null;
-
-  // กรองเฉพาะของที่มีสต็อก
-  const availableItems = m.items.filter(it => {
-    if (it.type === 'product') {
-      const p = products.find(x => x.id === it.refId);
-      return p && p.stockQty > 0;
-    }
-    return it.qty === 0 || it.qty > 0; // custom ถ้า qty=0 หมายถึงไม่จำกัด
-  });
-
-  // เช็คสต็อก custom ที่กำหนด qty
-  const hasStock = m.items.some(it => {
-    if (it.type === 'product') {
-      const p = products.find(x => x.id === it.refId);
-      return p && p.stockQty > 0;
-    }
-    return it.qty <= 0 || it.qty > 0;
-  });
-
-  if (!hasStock) return null;
+// สุ่ม 1 ครั้ง โดยรับ "รายการ rarity ที่อนุญาตให้สุ่มได้" (ผ่านการ re-normalize % แล้ว) มาจากภายนอก
+// avail = [{ rarity, pct, stock }, ...] เฉพาะ rarity ที่ stock > 0
+function pullOne(m, avail) {
+  const total = avail.reduce((s, r) => s + r.pct, 0);
+  if (total <= 0 || !avail.length) return null;
 
   let rand = Math.random() * total;
-  let chosen = m.rarities[m.rarities.length - 1];
-  for (const r of m.rarities) { rand -= Number(r.pct); if (rand <= 0) { chosen = r; break; } }
+  let chosen = avail[avail.length - 1].rarity;
+  for (const r of avail) {
+    rand -= r.pct;
+    if (rand <= 0) { chosen = r.rarity; break; }
+  }
 
-  const pool = availableItems.filter(it => it.rarityId === chosen.id && (
-    it.type === 'product'
-      ? (products.find(x => x.id === it.refId)?.stockQty || 0) > 0
-      : (it.qty <= 0 || it.qty > 0)
-  ));
-  const src = pool.length ? pool : availableItems;
-  if (!src.length) return null;
-  return { item: src[Math.floor(Math.random() * src.length)], rarity: chosen };
+  // สุ่มเฉพาะไอเทมที่อยู่ใน rarity ที่เลือก และยังมีสต็อกเหลือ — ไม่ข้ามไป rarity อื่นเด็ดขาด
+  const items = Array.isArray(m.items) ? m.items : [];
+  const pool = items.filter(it => it.rarityId === chosen.id && getGachaItemStock(it) > 0);
+  if (!pool.length) return null; // ไม่ควรเกิดขึ้นถ้า avail คำนวณถูก แต่กันไว้เพื่อความปลอดภัย
+  return { item: pool[Math.floor(Math.random() * pool.length)], rarity: chosen };
 }
 
 async function doPull(n) {
+  try {
+    await doPullInner(n);
+  } catch (err) {
+    console.error('doPull error:', err);
+    showToast('❌ สุ่มไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function doPullInner(n) {
   const m = gachaMachines.find(x => x.id === currentPullMachineId);
   if (!m) return;
 
-  // เช็คว่ามีของในตู้ไหม
-  const hasAny = m.items.some(it => {
-    if (it.type === 'product') {
-      const p = products.find(x => x.id === it.refId);
-      return p && p.stockQty > 0;
-    }
-    return it.qty <= 0 || it.qty > 0;
-  });
-  if (!hasAny) return showToast('⚠️ ของในตู้หมดแล้ว');
+  // 1) เช็คว่าแต่ละ rarity มีของเหลือไหม
+  const availability = getRarityAvailability(m);
+  const availableRarities = availability.filter(a => a.available);
+  const emptyRarities = availability.filter(a => !a.available);
+
+  // ของหมดทั้งตู้ ไม่มี rarity ไหนเหลือเลย
+  if (!availableRarities.length) {
+    return showToast('⚠️ ของในตู้หมดแล้ว');
+  }
+
+  // 2) ถ้ามี rarity ไหนหมด → popup แจ้งเตือนพร้อม % ที่ re-normalize ใหม่
+  if (emptyRarities.length) {
+    const totalAvailPct = availableRarities.reduce((s, a) => s + Number(a.rarity.pct), 0);
+    const newPctLines = availableRarities
+      .map(a => `${a.rarity.name} ${totalAvailPct > 0 ? ((Number(a.rarity.pct) / totalAvailPct) * 100).toFixed(1) : '0'}%`)
+      .join(', ');
+    const emptyNames = emptyRarities.map(a => a.rarity.name).join(', ');
+    const msg = `⚠️ ${emptyNames} หมดแล้ว จะสุ่มจาก ${newPctLines} เท่านั้น\n\nดำเนินการต่อ?`;
+    // 4) ถ้ากด Cancel → ไม่สุ่ม
+    if (!confirm(msg)) return;
+  }
+
+  // 3) สุ่มเฉพาะ rarity ที่มีของ โดย re-normalize % ใหม่ (ใช้ pct เดิม แต่จำกัด pool ไว้แค่ rarity ที่เหลือ —
+  //    การหารด้วย total ที่เล็กลงใน pullOne() ทำให้สัดส่วนเทียบกันถูกต้องโดยอัตโนมัติ)
+  const avail = availableRarities.map(a => ({ rarity: a.rarity, pct: Number(a.rarity.pct), stock: a.stock }));
 
   const results = [];
   for (let i = 0; i < n; i++) {
-    const r = pullOne(m);
-    if (r) results.push(r);
-  }
-  if (!results.length) return showToast('⚠️ ไม่มีไอเทมในตู้');
-
-  // ตัดสต็อก
-  for (const { item } of results) {
-    if (item.type === 'product') {
-      const p = products.find(x => x.id === item.refId);
-      if (p) {
-        p.stockQty -= 1;
-        await dbPut('products', { ...p });
-      }
-    } else if (item.qty > 0) {
-      item.qty -= 1;
-      // อัปเดต qty ใน gachaMachine
-      const machine = gachaMachines.find(x => x.id === currentPullMachineId);
-      if (machine) {
-        const gItem = machine.items.find(x => x.id === item.id);
-        if (gItem) gItem.qty -= 1;
-        await dbPut('gachaMachines', machine);
+    // เช็คสต็อกซ้ำระหว่างสุ่มหลายครั้งติดกัน (เผื่อ rarity หมดกลางทางตอนสุ่ม 10 ที)
+    const liveAvail = getRarityAvailability(m).filter(a => a.available)
+      .map(a => ({ rarity: a.rarity, pct: Number(a.rarity.pct), stock: a.stock }));
+    if (!liveAvail.length) break;
+    const r = pullOne(m, liveAvail);
+    if (r) {
+      results.push(r);
+      // ตัดสต็อกทันทีเพื่อให้การสุ่มครั้งถัดไปในลูปเดียวกันเห็นสต็อกที่ถูกต้อง
+      if (r.item.type === 'product') {
+        const p = products.find(x => x.id === r.item.refId);
+        if (p) p.stockQty -= 1;
+      } else if (r.item.qty > 0) {
+        r.item.qty -= 1;
       }
     }
   }
+  if (!results.length) return showToast('⚠️ ไม่มีไอเทมในตู้');
+
+  // บันทึกสต็อกที่ตัดแล้วลง DB (รวมรายการซ้ำให้บันทึกครั้งเดียวต่อสินค้า/ตู้)
+  const touchedProductIds = new Set();
+  let machineTouched = false;
+  for (const { item } of results) {
+    if (item.type === 'product') {
+      touchedProductIds.add(item.refId);
+    } else {
+      machineTouched = true;
+    }
+  }
+  await Promise.all([
+    ...[...touchedProductIds].map(pid => {
+      const p = products.find(x => x.id === pid);
+      return p ? dbPut('products', { ...p }) : Promise.resolve();
+    }),
+    ...(machineTouched ? [dbPut('gachaMachines', m)] : [])
+  ]);
   // render cards
   const wrap = document.getElementById('gacha-pull-result');
   wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
