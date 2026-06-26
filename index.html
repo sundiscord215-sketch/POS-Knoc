@@ -741,6 +741,150 @@
     min-width: 72px;
     text-align: right;
   }
+  /* ── GACHA ── */
+  .gacha-machine-card {
+    width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s, border-color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .gacha-machine-card:active { transform: scale(.96); }
+  .gacha-machine-top {
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    position: relative;
+  }
+  .gacha-machine-top img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gacha-machine-body {
+    padding: 10px 12px;
+  }
+  .gacha-machine-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gacha-machine-owner {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .gacha-machine-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 6px;
+  }
+  .gacha-machine-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .gacha-pull-btn {
+    flex: 1;
+    padding: 7px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #0f0f0f;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+  }
+  .gacha-pull-btn:active { opacity: .7; }
+  /* ── GACHA PULL MODAL ── */
+  .gacha-cards-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .gacha-card-wrap { perspective: 600px; }
+  .gacha-card {
+    width: 90px;
+    height: 128px;
+    border-radius: var(--radius);
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(180deg);
+    transition: transform .55s cubic-bezier(.4,0,.2,1);
+  }
+  .gacha-card.flipped { transform: rotateY(0deg); }
+  .gacha-card-front, .gacha-card-back {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .gacha-card-back {
+    background: linear-gradient(135deg,#1a0533,#2d1b69);
+    border: 1px solid #6c5ce7;
+    transform: rotateY(180deg);
+    font-size: 32px;
+    opacity: .6;
+  }
+  .gacha-card-front {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .gacha-card-front img {
+    width: 100%;
+    height: 65%;
+    object-fit: cover;
+  }
+  .gacha-card-emoji { font-size: 32px; }
+  .gacha-card-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 3px 4px;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gacha-card-rarity-bar {
+    height: 4px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+  }
+  .gacha-shine {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(120deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  }
+  .gacha-card.flipped .gacha-shine {
+    animation: gshine 1s ease .4s forwards;
+  }
+  @keyframes gshine { 0%{opacity:0} 40%{opacity:1} 100%{opacity:0} }
   /* ── PAGE: SETTINGS (export/import) ── */
   .settings-section {
     margin-bottom: 24px;
@@ -873,7 +1017,16 @@
         </div>
       </div>
     </div><!-- /page-pos -->
-
+   <!-- PAGE: GACHA -->
+    <div class="page" id="page-gacha">
+      <div class="section-header">
+        <span class="section-title">ตู้กาชา</span>
+        <button class="btn btn-primary btn-sm" onclick="openGachaMachineModal()">+ เพิ่มตู้</button>
+      </div>
+      <div id="gacha-scroll-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px;">
+        <div id="gacha-machines-row" style="display:flex;gap:14px;width:max-content;padding:4px 2px;"></div>
+      </div>
+    </div>
     <!-- PAGE: SUMMARY -->
     <div class="page" id="page-summary">
       <!-- date filter -->
@@ -991,6 +1144,14 @@
         <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
       </svg>
       ขาย
+    </button>
+    <button class="tab-btn" onclick="switchTab('gacha','กาชา',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4l3 3"/>
+        <path d="M8 12h1M15 12h1M12 8v1M12 15v1"/>
+      </svg>
+      กาชา
     </button>
     <button class="tab-btn" onclick="switchTab('summary','สรุปยอด',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -1154,13 +1315,87 @@
     </div>
   </div>
 </div>
+<!-- MODAL: GACHA MACHINE (จัดการตู้) -->
+<div class="modal-backdrop" id="modal-gacha-machine" onclick="handleBackdropClick(event,'modal-gacha-machine')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="gacha-machine-modal-title">เพิ่มตู้กาชา</div>
+    <input type="hidden" id="gacha-machine-edit-id">
 
+    <div class="form-group">
+      <label class="form-label">ชื่อตู้</label>
+      <input class="form-input" id="gacha-machine-name" placeholder="เช่น ตู้สุ่มพวงกุญแจ" type="text">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">เจ้าของ</label>
+      <select class="form-input" id="gacha-machine-owner"></select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">สีตู้</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="gacha-color-picker"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ราคาต่อ pull (บาท)</label>
+      <input class="form-input" id="gacha-machine-price" type="number" min="0" placeholder="50" oninput="calcGachaAvg()">
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="form-label" style="margin:0;">ระดับความหายาก</span>
+      <button class="btn btn-secondary btn-sm" onclick="addGachaRarity()">+ เพิ่ม</button>
+    </div>
+    <div id="gacha-rarity-list" style="margin-bottom:8px;"></div>
+    <div id="gacha-pct-msg" style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">รวม 0%</div>
+
+    <div class="divider"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="form-label" style="margin:0;">ไอเทมในตู้</span>
+      <button class="btn btn-secondary btn-sm" onclick="addGachaItem()">+ เพิ่มไอเทม</button>
+    </div>
+    <div id="gacha-item-list" style="margin-bottom:12px;"></div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">ต้นทุนเฉลี่ย / pull</div>
+      <div style="font-size:18px;font-weight:700;color:var(--accent);" id="gacha-avg-cost">—</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px;" id="gacha-avg-profit"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gacha-machine')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveGachaMachine()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GACHA PULL (สุ่ม) -->
+<div class="modal-backdrop" id="modal-gacha-pull" onclick="handleBackdropClick(event,'modal-gacha-pull')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="gacha-pull-title">สุ่มกาชา</div>
+    <div id="gacha-pull-result" style="min-height:160px;display:flex;align-items:center;justify-content:center;">
+      <div style="color:var(--text-dim);font-size:14px;">กดปุ่มด้านล่างเพื่อสุ่ม</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="doPull(1)">🎰 สุ่ม 1</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="doPull(10)">🎰 สุ่ม 10</button>
+    </div>
+    <div style="margin-top:10px;text-align:center;font-size:12px;color:var(--text-dim);" id="gacha-pull-price-label"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="closeModal('modal-gacha-pull')">ปิด</button>
+    </div>
+  </div>
+</div>
 <script>
 // ══════════════════════════════════════════
 //  IndexedDB Setup
 // ══════════════════════════════════════════
 const DB_NAME = 'pos-booth-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db;
 
 function initDB() {
@@ -1176,6 +1411,9 @@ function initDB() {
       }
       if (!d.objectStoreNames.contains('products')) {
         d.createObjectStore('products', { keyPath: 'id' });
+      }
+      if (!d.objectStoreNames.contains('gachaMachines')) {
+        d.createObjectStore('gachaMachines', { keyPath: 'id' });
       }
       if (!d.objectStoreNames.contains('saleItems')) {
         const s = d.createObjectStore('saleItems', { keyPath: 'saleId' });
@@ -2094,6 +2332,318 @@ function toggleSummaryOwner(header) {
   const arrow  = header.querySelector('span:last-child');
   const isOpen = detail.classList.toggle('open');
   arrow.style.transform = isOpen ? 'rotate(90deg)' : '';
+} 
+// ══════════════════════════════════════════
+//  GACHA
+// ══════════════════════════════════════════
+let gachaMachines = [];
+let currentGachaRarities = [];
+let currentGachaItems = [];
+let currentGachaColor = '#6c5ce7';
+let currentPullMachineId = null;
+
+const GACHA_COLORS = ['#6c5ce7','#e8956a','#6ed4a8','#f87171','#fcd34d','#7dd4fc','#f9a8d4','#a78bfa'];
+
+async function loadGachaMachines() {
+  gachaMachines = await dbGetAll('gachaMachines');
+  renderGachaMachines();
+}
+
+function renderGachaMachines() {
+  const row = document.getElementById('gacha-machines-row');
+  if (!gachaMachines.length) {
+    row.innerHTML = `<div class="empty" style="width:100vw;">
+      <div class="empty-icon">🎰</div>
+      <div class="empty-title">ยังไม่มีตู้กาชา</div>
+      <div class="empty-desc">กด + เพิ่มตู้ เพื่อเริ่มต้น</div>
+    </div>`;
+    return;
+  }
+  row.innerHTML = gachaMachines.map(m => {
+    const owner = owners.find(o => o.id === m.ownerId);
+    return `
+    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};">
+      <div class="gacha-machine-top" style="background:${m.color||'#6c5ce7'}22;">
+        <span style="font-size:48px;">🎰</span>
+      </div>
+      <div class="gacha-machine-body">
+        <div class="gacha-machine-name">${escHtml(m.name)}</div>
+        <div class="gacha-machine-owner">
+          ${owner ? `<span style="width:7px;height:7px;border-radius:50%;background:${owner.color};display:inline-block;"></span>${escHtml(owner.name)}` : '—'}
+        </div>
+        <div class="gacha-machine-price">฿${fmt(m.pricePerPull)} / pull</div>
+        <div class="gacha-machine-actions">
+          <button class="gacha-pull-btn" onclick="openPullModal('${m.id}')">🎰 สุ่ม</button>
+          <button class="btn-icon btn-sm" onclick="editGachaMachine('${m.id}')" style="padding:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon btn-sm" onclick="deleteGachaMachine('${m.id}')" style="padding:6px;color:var(--danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openGachaMachineModal() {
+  document.getElementById('gacha-machine-edit-id').value = '';
+  document.getElementById('gacha-machine-name').value = '';
+  document.getElementById('gacha-machine-price').value = '';
+  document.getElementById('gacha-machine-modal-title').textContent = 'เพิ่มตู้กาชา';
+  currentGachaRarities = [
+    {id: uid(), name:'Normal', pct:70, color:'#888'},
+    {id: uid(), name:'Rare', pct:25, color:'#378add'},
+    {id: uid(), name:'Ultra Rare', pct:5, color:'#a855f7'},
+  ];
+  currentGachaItems = [];
+  currentGachaColor = GACHA_COLORS[0];
+  renderGachaColorPicker();
+  populateGachaOwnerDropdown();
+  renderGachaRarityList();
+  renderGachaItemList();
+  calcGachaAvg();
+  openModal('modal-gacha-machine');
+}
+
+function editGachaMachine(id) {
+  const m = gachaMachines.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('gacha-machine-edit-id').value = m.id;
+  document.getElementById('gacha-machine-name').value = m.name;
+  document.getElementById('gacha-machine-price').value = m.pricePerPull;
+  document.getElementById('gacha-machine-modal-title').textContent = 'แก้ไขตู้กาชา';
+  currentGachaRarities = JSON.parse(JSON.stringify(m.rarities || []));
+  currentGachaItems = JSON.parse(JSON.stringify(m.items || []));
+  currentGachaColor = m.color || GACHA_COLORS[0];
+  renderGachaColorPicker();
+  populateGachaOwnerDropdown(m.ownerId);
+  renderGachaRarityList();
+  renderGachaItemList();
+  calcGachaAvg();
+  openModal('modal-gacha-machine');
+}
+
+function renderGachaColorPicker() {
+  const wrap = document.getElementById('gacha-color-picker');
+  wrap.innerHTML = GACHA_COLORS.map(c => `
+    <div onclick="selectGachaColor('${c}')"
+      style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;
+      border:3px solid ${c === currentGachaColor ? '#fff' : 'transparent'};transition:border-color .15s;"
+      id="gacha-cdot-${c.slice(1)}"></div>
+  `).join('');
+}
+
+function selectGachaColor(c) {
+  currentGachaColor = c;
+  document.querySelectorAll('#gacha-color-picker > div').forEach(d => d.style.borderColor = 'transparent');
+  const el = document.getElementById('gacha-cdot-' + c.slice(1));
+  if (el) el.style.borderColor = '#fff';
+}
+
+function populateGachaOwnerDropdown(selectedId) {
+  const sel = document.getElementById('gacha-machine-owner');
+  sel.innerHTML = '<option value="">— เลือกเจ้าของ —</option>' +
+    owners.map(o => `<option value="${o.id}" ${o.id === selectedId ? 'selected' : ''}>${escHtml(o.name)}</option>`).join('');
+}
+
+function renderGachaRarityList() {
+  const total = currentGachaRarities.reduce((s, r) => s + Number(r.pct), 0);
+  const msg = document.getElementById('gacha-pct-msg');
+  msg.textContent = 'รวม ' + total + '%' + (total !== 100 ? ' (ควรรวมเป็น 100%)' : ' ✓');
+  msg.style.color = total === 100 ? 'var(--accent)' : 'var(--danger)';
+
+  document.getElementById('gacha-rarity-list').innerHTML = currentGachaRarities.map((r, i) => `
+    <div style="display:grid;grid-template-columns:14px 1fr 70px 20px auto;gap:8px;align-items:center;
+      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      padding:8px 10px;margin-bottom:6px;">
+      <div style="width:12px;height:12px;border-radius:50%;background:${r.color};flex-shrink:0;"></div>
+      <input class="form-input" style="padding:4px 8px;font-size:13px;" value="${escHtml(r.name)}"
+        oninput="currentGachaRarities[${i}].name=this.value;renderGachaItemList()">
+      <input class="form-input" style="padding:4px 8px;font-size:13px;text-align:right;" type="number"
+        min="0" max="100" value="${r.pct}"
+        oninput="currentGachaRarities[${i}].pct=Number(this.value);renderGachaRarityList();calcGachaAvg()">
+      <span style="font-size:12px;color:var(--text-dim);">%</span>
+      <button onclick="currentGachaRarities.splice(${i},1);renderGachaRarityList();renderGachaItemList();calcGachaAvg()"
+        style="background:transparent;border:none;color:var(--danger);font-size:18px;cursor:pointer;line-height:1;">×</button>
+    </div>`).join('');
+}
+
+function addGachaRarity() {
+  const colors = ['#888','#378add','#a855f7','#e24b4a','#f59e0b','#10b981'];
+  currentGachaRarities.push({ id: uid(), name: 'New', pct: 0, color: colors[currentGachaRarities.length % colors.length] });
+  renderGachaRarityList();
+  renderGachaItemList();
+}
+
+function renderGachaItemList() {
+  document.getElementById('gacha-item-list').innerHTML = currentGachaItems.map((it, i) => `
+    <div style="display:grid;grid-template-columns:40px 1fr 110px 80px auto;gap:8px;align-items:center;
+      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+      padding:8px 10px;margin-bottom:6px;">
+      <div onclick="document.getElementById('gitem-img-${it.id}').click()"
+        style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface);
+        border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+        cursor:pointer;overflow:hidden;font-size:18px;">
+        ${it.img ? `<img src="${it.img}" style="width:100%;height:100%;object-fit:cover;">` : '📦'}
+        <input type="file" id="gitem-img-${it.id}" accept="image/*" style="display:none"
+          onchange="loadGachaItemImg(event,'${it.id}')">
+      </div>
+      <input class="form-input" style="padding:4px 8px;font-size:13px;" value="${escHtml(it.name)}"
+        oninput="currentGachaItems[${i}].name=this.value" placeholder="ชื่อไอเทม">
+      <select class="form-input" style="padding:4px 8px;font-size:13px;"
+        onchange="currentGachaItems[${i}].rarityId=this.value;calcGachaAvg()">
+        ${currentGachaRarities.map(r =>
+          `<option value="${r.id}" ${r.id === it.rarityId ? 'selected' : ''}>${escHtml(r.name)}</option>`
+        ).join('')}
+      </select>
+      <input class="form-input" style="padding:4px 8px;font-size:13px;text-align:right;" type="number"
+        min="0" value="${it.cost}" placeholder="ต้นทุน ฿"
+        oninput="currentGachaItems[${i}].cost=Number(this.value);calcGachaAvg()">
+      <button onclick="currentGachaItems.splice(${i},1);renderGachaItemList();calcGachaAvg()"
+        style="background:transparent;border:none;color:var(--danger);font-size:18px;cursor:pointer;line-height:1;">×</button>
+    </div>`).join('');
+}
+
+function addGachaItem() {
+  currentGachaItems.push({ id: uid(), name: 'ไอเทมใหม่', rarityId: currentGachaRarities[0]?.id || '', cost: 0, img: null });
+  renderGachaItemList();
+  calcGachaAvg();
+}
+
+function loadGachaItemImg(e, id) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const it = currentGachaItems.find(x => x.id === id);
+    if (it) { it.img = ev.target.result; renderGachaItemList(); }
+  };
+  r.readAsDataURL(f);
+}
+
+function calcGachaAvg() {
+  const price = parseFloat(document.getElementById('gacha-machine-price').value) || 0;
+  const total = currentGachaRarities.reduce((s, r) => s + Number(r.pct), 0);
+  if (total <= 0 || !currentGachaItems.length) {
+    document.getElementById('gacha-avg-cost').textContent = '—';
+    document.getElementById('gacha-avg-profit').textContent = '';
+    return;
+  }
+  let avgCost = 0;
+  currentGachaRarities.forEach(r => {
+    const pool = currentGachaItems.filter(it => it.rarityId === r.id);
+    if (!pool.length) return;
+    const avg = pool.reduce((s, it) => s + Number(it.cost), 0) / pool.length;
+    avgCost += (Number(r.pct) / total) * avg;
+  });
+  const profit = price - avgCost;
+  document.getElementById('gacha-avg-cost').textContent = '฿' + avgCost.toFixed(2);
+  document.getElementById('gacha-avg-profit').textContent =
+    'กำไรเฉลี่ย ' + (profit >= 0 ? '+' : '') + '฿' + profit.toFixed(2) + ' ต่อ pull';
+  document.getElementById('gacha-avg-profit').style.color = profit >= 0 ? 'var(--accent)' : 'var(--danger)';
+}
+
+async function saveGachaMachine() {
+  const name = document.getElementById('gacha-machine-name').value.trim();
+  const ownerId = document.getElementById('gacha-machine-owner').value;
+  const price = parseFloat(document.getElementById('gacha-machine-price').value);
+  if (!name) return showToast('⚠️ กรุณาใส่ชื่อตู้');
+  if (!ownerId) return showToast('⚠️ กรุณาเลือกเจ้าของ');
+  if (!(price >= 0)) return showToast('⚠️ กรุณาใส่ราคา pull');
+
+  const editId = document.getElementById('gacha-machine-edit-id').value;
+  await dbPut('gachaMachines', {
+    id: editId || uid(),
+    name, ownerId, color: currentGachaColor,
+    pricePerPull: price,
+    rarities: currentGachaRarities,
+    items: currentGachaItems
+  });
+  closeModal('modal-gacha-machine');
+  showToast(editId ? '✅ แก้ไขตู้แล้ว' : '✅ เพิ่มตู้กาชาแล้ว');
+  loadGachaMachines();
+}
+
+async function deleteGachaMachine(id) {
+  const m = gachaMachines.find(x => x.id === id);
+  if (!confirm(`ลบตู้ "${m.name}"?`)) return;
+  await dbDelete('gachaMachines', id);
+  showToast('🗑️ ลบตู้แล้ว');
+  loadGachaMachines();
+}
+
+// ── Pull ──
+function openPullModal(machineId) {
+  currentPullMachineId = machineId;
+  const m = gachaMachines.find(x => x.id === machineId);
+  if (!m) return;
+  document.getElementById('gacha-pull-title').textContent = '🎰 ' + m.name;
+  document.getElementById('gacha-pull-price-label').textContent = '฿' + fmt(m.pricePerPull) + ' / pull';
+  document.getElementById('gacha-pull-result').innerHTML = '<div style="color:var(--text-dim);font-size:14px;">กดปุ่มด้านล่างเพื่อสุ่ม</div>';
+  openModal('modal-gacha-pull');
+}
+
+function pullOne(m) {
+  const total = m.rarities.reduce((s, r) => s + Number(r.pct), 0);
+  if (total <= 0 || !m.items.length) return null;
+  let rand = Math.random() * total;
+  let chosen = m.rarities[m.rarities.length - 1];
+  for (const r of m.rarities) { rand -= Number(r.pct); if (rand <= 0) { chosen = r; break; } }
+  const pool = m.items.filter(it => it.rarityId === chosen.id);
+  const src = pool.length ? pool : m.items;
+  return { item: src[Math.floor(Math.random() * src.length)], rarity: chosen };
+}
+
+async function doPull(n) {
+  const m = gachaMachines.find(x => x.id === currentPullMachineId);
+  if (!m) return;
+  const results = [];
+  for (let i = 0; i < n; i++) {
+    const r = pullOne(m);
+    if (r) results.push(r);
+  }
+  if (!results.length) return showToast('⚠️ ไม่มีไอเทมในตู้');
+
+  // render cards
+  const wrap = document.getElementById('gacha-pull-result');
+  wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
+    <div class="gacha-card-wrap">
+      <div class="gacha-card">
+        <div class="gacha-card-back">✦</div>
+        <div class="gacha-card-front">
+          ${item.img ? `<img src="${item.img}" alt="${escHtml(item.name)}">` : '<div class="gacha-card-emoji">📦</div>'}
+          <div class="gacha-card-name">${escHtml(item.name)}</div>
+          <div class="gacha-card-rarity-bar" style="background:${rarity.color};"></div>
+          <div class="gacha-shine"></div>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+
+  // flip animation
+  const cards = wrap.querySelectorAll('.gacha-card');
+  cards.forEach((c, i) => setTimeout(() => c.classList.add('flipped'), n === 1 ? 300 : i * 120 + 200));
+
+  // บันทึก SaleItem
+  const now = new Date().toISOString();
+  await Promise.all(results.map(({item, rarity}) => dbPut('saleItems', {
+    saleId: uid(),
+    datetime: now,
+    productId: item.id,
+    ownerId: m.ownerId,
+    qty: 1,
+    sellPriceAtSale: m.pricePerPull,
+    costPerUnitAtSale: Number(item.cost) || 0,
+    sourceType: 'gacha',
+    machineId: m.id
+  })));
+  showToast('✅ บันทึกยอดขายกาชาแล้ว');
 }  
 // ══════════════════════════════════════════
 //  EXPORT / IMPORT
@@ -2186,8 +2736,8 @@ function escHtml(str) {
 //  Boot
 // ══════════════════════════════════════════
 async function boot() {
-  await initDB();  // ← เพิ่มบรรทัดนี้
-  await Promise.all([loadMaterials(), loadOwners(), loadProducts()]);
+  await initDB();
+  await Promise.all([loadMaterials(), loadOwners(), loadProducts(), loadGachaMachines()]);
   initPOS();
 
   if ('serviceWorker' in navigator) {
