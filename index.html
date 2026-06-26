@@ -2249,36 +2249,82 @@ async function renderSummary() {
   // group by owner
   const byOwner = {};
   sales.forEach(s => {
-    if (!byOwner[s.ownerId]) byOwner[s.ownerId] = {};
-    if (!byOwner[s.ownerId][s.productId]) byOwner[s.ownerId][s.productId] = { qty: 0, sales: 0, cost: 0 };
-    byOwner[s.ownerId][s.productId].qty   += s.qty;
-    byOwner[s.ownerId][s.productId].sales += s.qty * s.sellPriceAtSale;
-    byOwner[s.ownerId][s.productId].cost  += s.qty * s.costPerUnitAtSale;
+    if (!byOwner[s.ownerId]) byOwner[s.ownerId] = { gacha: {}, products: {} };
+    if (s.sourceType === 'gacha') {
+      const mId = s.machineId || 'unknown';
+      if (!byOwner[s.ownerId].gacha[mId]) byOwner[s.ownerId].gacha[mId] = { items: {}, sales: 0, cost: 0, qty: 0 };
+      byOwner[s.ownerId].gacha[mId].sales += s.qty * s.sellPriceAtSale;
+      byOwner[s.ownerId].gacha[mId].cost  += s.qty * s.costPerUnitAtSale;
+      byOwner[s.ownerId].gacha[mId].qty   += s.qty;
+      const iId = s.productId;
+      if (!byOwner[s.ownerId].gacha[mId].items[iId]) byOwner[s.ownerId].gacha[mId].items[iId] = { name: s.productName || iId, qty: 0, cost: 0 };
+      byOwner[s.ownerId].gacha[mId].items[iId].qty  += s.qty;
+      byOwner[s.ownerId].gacha[mId].items[iId].cost += s.qty * s.costPerUnitAtSale;
+    } else {
+      const pId = s.productId;
+      if (!byOwner[s.ownerId].products[pId]) byOwner[s.ownerId].products[pId] = { qty: 0, sales: 0, cost: 0 };
+      byOwner[s.ownerId].products[pId].qty   += s.qty;
+      byOwner[s.ownerId].products[pId].sales += s.qty * s.sellPriceAtSale;
+      byOwner[s.ownerId].products[pId].cost  += s.qty * s.costPerUnitAtSale;
+    }
   });
 
   const list = document.getElementById('summary-list');
-
   if (!Object.keys(byOwner).length) {
     list.innerHTML = `<div class="empty">
       <div class="empty-icon">📊</div>
       <div class="empty-title">ยังไม่มียอดขาย</div>
-      <div class="empty-desc">ขายสินค้าผ่านหน้า POS ก่อนครับ</div>
+      <div class="empty-desc">ขายสินค้าผ่านหน้า POS หรือกาชาก่อนครับ</div>
     </div>`;
     return;
   }
 
-  list.innerHTML = Object.entries(byOwner).map(([ownerId, prodMap]) => {
+  list.innerHTML = Object.entries(byOwner).map(([ownerId, data]) => {
     const owner = owners.find(o => o.id === ownerId);
     const ownerName  = owner ? owner.name : ownerId;
     const ownerColor = owner ? owner.color : '#888';
 
-    const ownerSales  = Object.values(prodMap).reduce((s, x) => s + x.sales, 0);
-    const ownerCost   = Object.values(prodMap).reduce((s, x) => s + x.cost, 0);
+    // คำนวณยอดรวม owner
+    const allSalesOwner = [
+      ...Object.values(data.gacha).map(g => ({ sales: g.sales, cost: g.cost, qty: g.qty })),
+      ...Object.values(data.products).map(p => ({ sales: p.sales, cost: p.cost, qty: p.qty }))
+    ];
+    const ownerSales  = allSalesOwner.reduce((s, x) => s + x.sales, 0);
+    const ownerCost   = allSalesOwner.reduce((s, x) => s + x.cost, 0);
     const ownerProfit = ownerSales - ownerCost;
-    const ownerQty    = Object.values(prodMap).reduce((s, x) => s + x.qty, 0);
+    const ownerQty    = allSalesOwner.reduce((s, x) => s + x.qty, 0);
 
-    // sort products by qty desc
-    const prodRows = Object.entries(prodMap)
+    // กาชา rows
+    const gachaRows = Object.entries(data.gacha).map(([mId, gdata]) => {
+      const machine = gachaMachines.find(x => x.id === mId);
+      const mName = machine ? machine.name : (gdata.items[Object.keys(gdata.items)[0]]?.name || mId);
+      const mProfit = gdata.sales - gdata.cost;
+      const itemRows = Object.entries(gdata.items)
+        .sort((a, b) => b[1].qty - a[1].qty)
+        .map(([iId, d]) => `
+          <div class="summary-product-row" style="padding-left:28px;">
+            <div class="summary-product-name">↳ ${escHtml(d.name)}</div>
+            <div class="summary-product-qty">${d.qty} ชิ้น</div>
+            <div style="text-align:right;min-width:80px;">
+              <div style="font-size:10px;color:var(--text-dim);">ต้นทุน</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-dim);">฿${fmt(d.cost)}</div>
+            </div>
+          </div>`).join('');
+      return `
+        <div class="summary-product-row" style="cursor:pointer;background:var(--surface2);"
+          onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+          <div class="summary-product-name">🎰 ${escHtml(mName)}</div>
+          <div class="summary-product-qty">${gdata.qty} pull</div>
+          <div style="text-align:right;min-width:80px;">
+            <div style="font-size:10px;color:var(--text-dim);">กำไร</div>
+            <div class="summary-product-profit" style="color:${mProfit>=0?'var(--accent)':'var(--danger)'};">฿${fmt(mProfit)}</div>
+          </div>
+        </div>
+        <div style="display:none;">${itemRows}</div>`;
+    }).join('');
+
+    // สินค้าปกติ rows
+    const prodRows = Object.entries(data.products)
       .sort((a, b) => b[1].qty - a[1].qty)
       .map(([productId, d]) => {
         const prod = products.find(p => p.id === productId);
@@ -2300,8 +2346,8 @@ async function renderSummary() {
         <div class="owner-dot" style="background:${ownerColor};width:12px;height:12px;"></div>
         <div class="summary-owner-name">${escHtml(ownerName)}</div>
         <div class="summary-stat" style="margin-right:12px;">
-          <div class="summary-stat-label">ขาย</div>
-          <div class="summary-stat-value" style="color:var(--text-dim);">${ownerQty} ชิ้น</div>
+          <div class="summary-stat-label">รายการ</div>
+          <div class="summary-stat-value" style="color:var(--text-dim);">${ownerQty}</div>
         </div>
         <div class="summary-stat" style="margin-right:12px;">
           <div class="summary-stat-label">ยอด</div>
@@ -2314,7 +2360,7 @@ async function renderSummary() {
         <span style="color:var(--text-faint);margin-left:6px;font-size:18px;">›</span>
       </div>
       <div class="summary-products">
-        ${prodRows}
+        ${gachaRows}${prodRows}
       </div>
     </div>`;
   }).join('');
@@ -2354,8 +2400,15 @@ function renderGachaMachines() {
   }
   row.innerHTML = gachaMachines.map(m => {
     const owner = owners.find(o => o.id === m.ownerId);
+    const isEmpty = !m.items.some(it => {
+      if (it.type === 'product') {
+        const p = products.find(x => x.id === it.refId);
+        return p && p.stockQty > 0;
+      }
+      return it.qty <= 0 || it.qty > 0;
+    });
     return `
-    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};">
+    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};${isEmpty?'opacity:.4;filter:grayscale(1);':''}">`
       <div class="gacha-machine-top" style="background:${m.color||'#6c5ce7'}22;">
         <span style="font-size:48px;">🎰</span>
       </div>
@@ -2366,7 +2419,7 @@ function renderGachaMachines() {
         </div>
         <div class="gacha-machine-price">฿${fmt(m.pricePerPull)} / pull</div>
         <div class="gacha-machine-actions">
-          <button class="gacha-pull-btn" onclick="openPullModal('${m.id}')">🎰 สุ่ม</button>
+          <button class="gacha-pull-btn" ${isEmpty?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="${isEmpty?'':`openPullModal('${m.id}')`}">🎰 ${isEmpty?'หมด':'สุ่ม'}</button>
           <button class="btn-icon btn-sm" onclick="editGachaMachine('${m.id}')" style="padding:6px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -2477,36 +2530,81 @@ function addGachaRarity() {
 }
 
 function renderGachaItemList() {
-  document.getElementById('gacha-item-list').innerHTML = currentGachaItems.map((it, i) => `
-    <div style="display:grid;grid-template-columns:40px 1fr 110px 80px auto;gap:8px;align-items:center;
-      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
-      padding:8px 10px;margin-bottom:6px;">
-      <div onclick="document.getElementById('gitem-img-${it.id}').click()"
-        style="width:36px;height:36px;border-radius:var(--radius-sm);background:var(--surface);
-        border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-        cursor:pointer;overflow:hidden;font-size:18px;">
-        ${it.img ? `<img src="${it.img}" style="width:100%;height:100%;object-fit:cover;">` : '📦'}
-        <input type="file" id="gitem-img-${it.id}" accept="image/*" style="display:none"
-          onchange="loadGachaItemImg(event,'${it.id}')">
+  document.getElementById('gacha-item-list').innerHTML = currentGachaItems.map((it, i) => {
+    const isProduct = it.type === 'product';
+    const linkedProd = isProduct ? products.find(p => p.id === it.refId) : null;
+    return `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <select class="form-input" style="padding:4px 8px;font-size:12px;flex:0 0 100px;"
+          onchange="setGachaItemType(${i},this.value)">
+          <option value="custom" ${!isProduct?'selected':''}>กรอกเอง</option>
+          <option value="product" ${isProduct?'selected':''}>ผูกสินค้า</option>
+        </select>
+        <select class="form-input" style="padding:4px 8px;font-size:13px;flex:1;"
+          onchange="currentGachaItems[${i}].rarityId=this.value;calcGachaAvg()">
+          ${currentGachaRarities.map(r =>
+            `<option value="${r.id}" ${r.id === it.rarityId ? 'selected' : ''}>${escHtml(r.name)}</option>`
+          ).join('')}
+        </select>
+        <button onclick="currentGachaItems.splice(${i},1);renderGachaItemList();calcGachaAvg()"
+          style="background:transparent;border:none;color:var(--danger);font-size:18px;cursor:pointer;line-height:1;">×</button>
       </div>
-      <input class="form-input" style="padding:4px 8px;font-size:13px;" value="${escHtml(it.name)}"
-        oninput="currentGachaItems[${i}].name=this.value" placeholder="ชื่อไอเทม">
-      <select class="form-input" style="padding:4px 8px;font-size:13px;"
-        onchange="currentGachaItems[${i}].rarityId=this.value;calcGachaAvg()">
-        ${currentGachaRarities.map(r =>
-          `<option value="${r.id}" ${r.id === it.rarityId ? 'selected' : ''}>${escHtml(r.name)}</option>`
-        ).join('')}
-      </select>
-      <input class="form-input" style="padding:4px 8px;font-size:13px;text-align:right;" type="number"
-        min="0" value="${it.cost}" placeholder="ต้นทุน ฿"
-        oninput="currentGachaItems[${i}].cost=Number(this.value);calcGachaAvg()">
-      <button onclick="currentGachaItems.splice(${i},1);renderGachaItemList();calcGachaAvg()"
-        style="background:transparent;border:none;color:var(--danger);font-size:18px;cursor:pointer;line-height:1;">×</button>
-    </div>`).join('');
+      ${isProduct ? `
+        <select class="form-input" style="padding:4px 8px;font-size:13px;width:100%;"
+          onchange="linkGachaProduct(${i},this.value)">
+          <option value="">— เลือกสินค้า —</option>
+          ${products.map(p =>
+            `<option value="${p.id}" ${p.id === it.refId ? 'selected' : ''}>${escHtml(p.name)} (ต้นทุน ${fmt(p.costPerUnit)}฿ | สต็อก ${p.stockQty})</option>`
+          ).join('')}
+        </select>
+        ${linkedProd ? `<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">ต้นทุน ${fmt(linkedProd.costPerUnit)}฿ · สต็อก ${linkedProd.stockQty} ชิ้น</div>` : ''}
+      ` : `
+        <div style="display:grid;grid-template-columns:1fr 80px 70px;gap:6px;">
+          <input class="form-input" style="padding:4px 8px;font-size:13px;" value="${escHtml(it.name)}"
+            oninput="currentGachaItems[${i}].name=this.value" placeholder="ชื่อไอเทม">
+          <input class="form-input" style="padding:4px 8px;font-size:13px;text-align:right;" type="number"
+            min="0" value="${it.cost}" placeholder="ต้นทุน฿"
+            oninput="currentGachaItems[${i}].cost=Number(this.value);calcGachaAvg()">
+          <input class="form-input" style="padding:4px 8px;font-size:13px;text-align:right;" type="number"
+            min="0" value="${it.qty||0}" placeholder="จำนวน"
+            oninput="currentGachaItems[${i}].qty=Number(this.value)">
+        </div>
+      `}
+    </div>`;
+  }).join('');
+}
+
+function setGachaItemType(i, type) {
+  currentGachaItems[i].type = type;
+  currentGachaItems[i].refId = '';
+  currentGachaItems[i].name = 'ไอเทมใหม่';
+  currentGachaItems[i].cost = 0;
+  currentGachaItems[i].qty = 0;
+  renderGachaItemList();
+  calcGachaAvg();
+}
+
+function linkGachaProduct(i, productId) {
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  currentGachaItems[i].refId = productId;
+  currentGachaItems[i].name = p.name;
+  currentGachaItems[i].cost = p.costPerUnit;
+  renderGachaItemList();
+  calcGachaAvg();
 }
 
 function addGachaItem() {
-  currentGachaItems.push({ id: uid(), name: 'ไอเทมใหม่', rarityId: currentGachaRarities[0]?.id || '', cost: 0, img: null });
+  currentGachaItems.push({
+    id: uid(),
+    type: 'custom',
+    refId: '',
+    name: 'ไอเทมใหม่',
+    cost: 0,
+    qty: 0,
+    rarityId: currentGachaRarities[0]?.id || ''
+  });
   renderGachaItemList();
   calcGachaAvg();
 }
@@ -2531,9 +2629,14 @@ function calcGachaAvg() {
   }
   let avgCost = 0;
   currentGachaRarities.forEach(r => {
-    const pool = currentGachaItems.filter(it => it.rarityId === r.id);
+    const pool = currentGachaItems.filter(it => it.rarityId === r.id && getGachaItemStock(it) > 0);
     if (!pool.length) return;
-    const avg = pool.reduce((s, it) => s + Number(it.cost), 0) / pool.length;
+    const avg = pool.reduce((s, it) => {
+      const cost = it.type === 'product'
+        ? (products.find(p => p.id === it.refId)?.costPerUnit || 0)
+        : Number(it.cost);
+      return s + cost;
+    }, 0) / pool.length;
     avgCost += (Number(r.pct) / total) * avg;
   });
   const profit = price - avgCost;
@@ -2541,6 +2644,14 @@ function calcGachaAvg() {
   document.getElementById('gacha-avg-profit').textContent =
     'กำไรเฉลี่ย ' + (profit >= 0 ? '+' : '') + '฿' + profit.toFixed(2) + ' ต่อ pull';
   document.getElementById('gacha-avg-profit').style.color = profit >= 0 ? 'var(--accent)' : 'var(--danger)';
+}
+
+function getGachaItemStock(it) {
+  if (it.type === 'product') {
+    const p = products.find(x => x.id === it.refId);
+    return p ? p.stockQty : 0;
+  }
+  return it.qty > 0 ? it.qty : Infinity;
 }
 
 async function saveGachaMachine() {
@@ -2586,17 +2697,55 @@ function openPullModal(machineId) {
 function pullOne(m) {
   const total = m.rarities.reduce((s, r) => s + Number(r.pct), 0);
   if (total <= 0 || !m.items.length) return null;
+
+  // กรองเฉพาะของที่มีสต็อก
+  const availableItems = m.items.filter(it => {
+    if (it.type === 'product') {
+      const p = products.find(x => x.id === it.refId);
+      return p && p.stockQty > 0;
+    }
+    return it.qty === 0 || it.qty > 0; // custom ถ้า qty=0 หมายถึงไม่จำกัด
+  });
+
+  // เช็คสต็อก custom ที่กำหนด qty
+  const hasStock = m.items.some(it => {
+    if (it.type === 'product') {
+      const p = products.find(x => x.id === it.refId);
+      return p && p.stockQty > 0;
+    }
+    return it.qty <= 0 || it.qty > 0;
+  });
+
+  if (!hasStock) return null;
+
   let rand = Math.random() * total;
   let chosen = m.rarities[m.rarities.length - 1];
   for (const r of m.rarities) { rand -= Number(r.pct); if (rand <= 0) { chosen = r; break; } }
-  const pool = m.items.filter(it => it.rarityId === chosen.id);
-  const src = pool.length ? pool : m.items;
+
+  const pool = availableItems.filter(it => it.rarityId === chosen.id && (
+    it.type === 'product'
+      ? (products.find(x => x.id === it.refId)?.stockQty || 0) > 0
+      : (it.qty <= 0 || it.qty > 0)
+  ));
+  const src = pool.length ? pool : availableItems;
+  if (!src.length) return null;
   return { item: src[Math.floor(Math.random() * src.length)], rarity: chosen };
 }
 
 async function doPull(n) {
   const m = gachaMachines.find(x => x.id === currentPullMachineId);
   if (!m) return;
+
+  // เช็คว่ามีของในตู้ไหม
+  const hasAny = m.items.some(it => {
+    if (it.type === 'product') {
+      const p = products.find(x => x.id === it.refId);
+      return p && p.stockQty > 0;
+    }
+    return it.qty <= 0 || it.qty > 0;
+  });
+  if (!hasAny) return showToast('⚠️ ของในตู้หมดแล้ว');
+
   const results = [];
   for (let i = 0; i < n; i++) {
     const r = pullOne(m);
@@ -2604,6 +2753,69 @@ async function doPull(n) {
   }
   if (!results.length) return showToast('⚠️ ไม่มีไอเทมในตู้');
 
+  // ตัดสต็อก
+  for (const { item } of results) {
+    if (item.type === 'product') {
+      const p = products.find(x => x.id === item.refId);
+      if (p) {
+        p.stockQty -= 1;
+        await dbPut('products', { ...p });
+      }
+    } else if (item.qty > 0) {
+      item.qty -= 1;
+      // อัปเดต qty ใน gachaMachine
+      const machine = gachaMachines.find(x => x.id === currentPullMachineId);
+      if (machine) {
+        const gItem = machine.items.find(x => x.id === item.id);
+        if (gItem) gItem.qty -= 1;
+        await dbPut('gachaMachines', machine);
+      }
+    }
+  }
+
+  // render cards
+  const wrap = document.getElementById('gacha-pull-result');
+  wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({ item, rarity }) => `
+    <div class="gacha-card-wrap">
+      <div class="gacha-card">
+        <div class="gacha-card-back">✦</div>
+        <div class="gacha-card-front">
+          ${item.img ? `<img src="${item.img}" alt="${escHtml(item.name)}">` : '<div class="gacha-card-emoji">📦</div>'}
+          <div class="gacha-card-name">${escHtml(item.name)}</div>
+          <div class="gacha-card-rarity-bar" style="background:${rarity.color};"></div>
+          <div class="gacha-shine"></div>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+
+  const cards = wrap.querySelectorAll('.gacha-card');
+  cards.forEach((c, i) => setTimeout(() => c.classList.add('flipped'), n === 1 ? 300 : i * 120 + 200));
+
+  // บันทึก SaleItem
+  const now = new Date().toISOString();
+  await Promise.all(results.map(({ item, rarity }) => {
+    const cost = item.type === 'product'
+      ? (products.find(p => p.id === item.refId)?.costPerUnit || 0)
+      : Number(item.cost);
+    return dbPut('saleItems', {
+      saleId: uid(),
+      datetime: now,
+      productId: item.id,
+      productName: item.name,
+      ownerId: m.ownerId,
+      qty: 1,
+      sellPriceAtSale: m.pricePerPull,
+      costPerUnitAtSale: cost,
+      sourceType: 'gacha',
+      machineId: m.id,
+      machineName: m.name,
+      rarityName: rarity.name
+    });
+  }));
+
+  renderGachaMachines();
+  showToast('✅ บันทึกยอดขายกาชาแล้ว');
+}
   // render cards
   const wrap = document.getElementById('gacha-pull-result');
   wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
