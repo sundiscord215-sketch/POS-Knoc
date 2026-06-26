@@ -2777,6 +2777,20 @@ async function doPull(n) {
       }
     }
   }
+  // render cards
+  const wrap = document.getElementById('gacha-pull-result');
+  wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
+    <div class="gacha-card-wrap">
+      <div class="gacha-card">
+        <div class="gacha-card-back">✦</div>
+        <div class="gacha-card-front">
+          ${item.img ? `<img src="${item.img}" alt="${escHtml(item.name)}">` : '<div class="gacha-card-emoji">📦</div>'}
+          <div class="gacha-card-name">${escHtml(item.name)}</div>
+          <div class="gacha-card-rarity-bar" style="background:${rarity.color};"></div>
+          <div class="gacha-shine"></div>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
   // flip animation
   const cards = wrap.querySelectorAll('.gacha-card');
   cards.forEach((c, i) => setTimeout(() => c.classList.add('flipped'), n === 1 ? 300 : i * 120 + 200));
