@@ -2408,7 +2408,7 @@ function renderGachaMachines() {
       return it.qty <= 0 || it.qty > 0;
     });
     return `
-    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};${isEmpty?'opacity:.4;filter:grayscale(1);':''}">`
+    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};${isEmpty?'opacity:.4;filter:grayscale(1);':''}">
       <div class="gacha-machine-top" style="background:${m.color||'#6c5ce7'}22;">
         <span style="font-size:48px;">🎰</span>
       </div>
@@ -2772,50 +2772,6 @@ async function doPull(n) {
       }
     }
   }
-
-  // render cards
-  const wrap = document.getElementById('gacha-pull-result');
-  wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({ item, rarity }) => `
-    <div class="gacha-card-wrap">
-      <div class="gacha-card">
-        <div class="gacha-card-back">✦</div>
-        <div class="gacha-card-front">
-          ${item.img ? `<img src="${item.img}" alt="${escHtml(item.name)}">` : '<div class="gacha-card-emoji">📦</div>'}
-          <div class="gacha-card-name">${escHtml(item.name)}</div>
-          <div class="gacha-card-rarity-bar" style="background:${rarity.color};"></div>
-          <div class="gacha-shine"></div>
-        </div>
-      </div>
-    </div>`).join('')}</div>`;
-
-  const cards = wrap.querySelectorAll('.gacha-card');
-  cards.forEach((c, i) => setTimeout(() => c.classList.add('flipped'), n === 1 ? 300 : i * 120 + 200));
-
-  // บันทึก SaleItem
-  const now = new Date().toISOString();
-  await Promise.all(results.map(({ item, rarity }) => {
-    const cost = item.type === 'product'
-      ? (products.find(p => p.id === item.refId)?.costPerUnit || 0)
-      : Number(item.cost);
-    return dbPut('saleItems', {
-      saleId: uid(),
-      datetime: now,
-      productId: item.id,
-      productName: item.name,
-      ownerId: m.ownerId,
-      qty: 1,
-      sellPriceAtSale: m.pricePerPull,
-      costPerUnitAtSale: cost,
-      sourceType: 'gacha',
-      machineId: m.id,
-      machineName: m.name,
-      rarityName: rarity.name
-    });
-  }));
-
-  renderGachaMachines();
-  showToast('✅ บันทึกยอดขายกาชาแล้ว');
-}
   // render cards
   const wrap = document.getElementById('gacha-pull-result');
   wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
