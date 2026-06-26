@@ -1349,10 +1349,15 @@
       <button class="btn btn-secondary btn-sm" onclick="addGachaRarity()">+ เพิ่ม</button>
     </div>
     <div id="gacha-rarity-list" style="margin-bottom:8px;"></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+  <span style="font-size:12px;color:var(--text-dim);">ต้นทุนเฉลี่ย / pull</span>
+  <div style="text-align:right;">
+    <div id="gacha-avg-cost" style="font-size:14px;font-weight:700;color:var(--accent);">—</div>
+    <div id="gacha-avg-profit" style="font-size:11px;margin-top:2px;"></div>
+  </div>
+</div>
     <div id="gacha-pct-msg" style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">รวม 0%</div>
-
     <div class="divider"></div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <span class="form-label" style="margin:0;">ไอเทมในตู้</span>
       <button class="btn btn-secondary btn-sm" onclick="addGachaItem()">+ เพิ่มไอเทม</button>
@@ -2772,21 +2777,6 @@ async function doPull(n) {
       }
     }
   }
-  // render cards
-  const wrap = document.getElementById('gacha-pull-result');
-  wrap.innerHTML = `<div class="gacha-cards-row">${results.map(({item, rarity}) => `
-    <div class="gacha-card-wrap">
-      <div class="gacha-card">
-        <div class="gacha-card-back">✦</div>
-        <div class="gacha-card-front">
-          ${item.img ? `<img src="${item.img}" alt="${escHtml(item.name)}">` : '<div class="gacha-card-emoji">📦</div>'}
-          <div class="gacha-card-name">${escHtml(item.name)}</div>
-          <div class="gacha-card-rarity-bar" style="background:${rarity.color};"></div>
-          <div class="gacha-shine"></div>
-        </div>
-      </div>
-    </div>`).join('')}</div>`;
-
   // flip animation
   const cards = wrap.querySelectorAll('.gacha-card');
   cards.forEach((c, i) => setTimeout(() => c.classList.add('flipped'), n === 1 ? 300 : i * 120 + 200));
