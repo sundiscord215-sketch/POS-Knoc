@@ -916,12 +916,6 @@
     color: var(--text-dim);
     margin-top: 2px;
   }
- #gacha-machines-row > div {
-  width: calc((100vw - 48px) / 3);
-  min-width: 120px;
-  max-width: 240px;
-  flex-shrink: 0;
-}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1029,9 +1023,9 @@
         <span class="section-title">ตู้กาชา</span>
         <button class="btn btn-primary btn-sm" onclick="openGachaMachineModal()">+ เพิ่มตู้</button>
       </div>
-      <div id="gacha-scroll-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px;margin:0 -16px;padding-left:16px;">
-  <div id="gacha-machines-row" style="display:flex;gap:0;width:max-content;padding:4px 0;"></div>
-</div>
+      <div id="gacha-scroll-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px;">
+        <div id="gacha-machines-row" style="display:flex;gap:14px;width:max-content;padding:4px 2px;"></div>
+      </div>
     </div>
     <!-- PAGE: SUMMARY -->
     <div class="page" id="page-summary">
@@ -1339,52 +1333,11 @@
     </div>
 
     <div class="form-group">
-  <label class="form-label">สีตู้</label>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="gacha-color-picker"></div>
-</div>
-
-<div class="form-group">
-  <label class="form-label">ทรงตู้</label>
-  <div style="display:flex;gap:12px;margin-top:4px;" id="gacha-shape-picker">
-
-    <div onclick="selectGachaShape('rect')" id="shape-rect"
-      style="flex:1;border:2px solid var(--accent);border-radius:var(--radius);
-        padding:8px 4px;cursor:pointer;text-align:center;transition:border-color .15s;">
-      <svg width="64" height="72" viewBox="0 0 64 72" style="display:block;margin:0 auto 4px;">
-        <rect x="18" y="0" width="28" height="8" rx="4" fill="#6c5ce7"/>
-        <rect x="1" y="7" width="62" height="46" rx="4" fill="#6c5ce722" stroke="#6c5ce7" stroke-width="2"/>
-        <circle cx="14" cy="36" r="9" fill="#ed93b122"/><circle cx="14" cy="36" r="9" fill="none" stroke="#ed93b1" stroke-width="1.2"/>
-        <circle cx="32" cy="42" r="11" fill="#378add22"/><circle cx="32" cy="42" r="11" fill="none" stroke="#378add" stroke-width="1.2"/>
-        <circle cx="50" cy="36" r="9" fill="#fac77522"/><circle cx="50" cy="36" r="9" fill="none" stroke="#fac775" stroke-width="1.2"/>
-        <rect x="0" y="53" width="64" height="19" rx="0 0 8 8" fill="#6c5ce7"/>
-        <circle cx="20" cy="62" r="7" fill="#4a3ab7"/>
-        <circle cx="20" cy="62" r="4" fill="#fac775"/>
-        <rect x="36" y="57" width="10" height="10" rx="3" fill="white" opacity="0.8"/>
-      </svg>
-      <div style="font-size:11px;font-weight:600;color:var(--accent);">สี่เหลี่ยมโดม</div>
+      <label class="form-label">สีตู้</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="gacha-color-picker"></div>
     </div>
 
-    <div onclick="selectGachaShape('dome')" id="shape-dome"
-      style="flex:1;border:2px solid var(--border);border-radius:var(--radius);
-        padding:8px 4px;cursor:pointer;text-align:center;transition:border-color .15s;">
-      <svg width="64" height="72" viewBox="0 0 64 72" style="display:block;margin:0 auto 4px;">
-        <rect x="22" y="0" width="20" height="8" rx="4" fill="#6c5ce7"/>
-        <ellipse cx="32" cy="36" rx="31" ry="29" fill="#6c5ce722" stroke="#6c5ce7" stroke-width="2"/>
-        <circle cx="14" cy="38" r="8" fill="#ed93b122"/><circle cx="14" cy="38" r="8" fill="none" stroke="#ed93b1" stroke-width="1.2"/>
-        <circle cx="32" cy="44" r="10" fill="#378add22"/><circle cx="32" cy="44" r="10" fill="none" stroke="#378add" stroke-width="1.2"/>
-        <circle cx="50" cy="38" r="8" fill="#fac77522"/><circle cx="50" cy="38" r="8" fill="none" stroke="#fac775" stroke-width="1.2"/>
-        <rect x="8" y="58" width="48" height="14" rx="0 0 8 8" fill="#6c5ce7"/>
-        <circle cx="24" cy="65" r="5" fill="#4a3ab7"/>
-        <circle cx="24" cy="65" r="3" fill="#fac775"/>
-        <rect x="34" y="60" width="8" height="8" rx="2" fill="white" opacity="0.8"/>
-      </svg>
-      <div style="font-size:11px;font-weight:600;color:var(--text-dim);">กลมโดม</div>
-    </div>
-
-  </div>
-</div>
-
-<div class="divider"></div>
+    <div class="form-group">
       <label class="form-label">ราคาต่อ pull (บาท)</label>
       <input class="form-input" id="gacha-machine-price" type="number" min="0" placeholder="50" oninput="calcGachaAvg()">
     </div>
@@ -2431,7 +2384,6 @@ let gachaMachines = [];
 let currentGachaRarities = [];
 let currentGachaItems = [];
 let currentGachaColor = '#6c5ce7';
-let currentGachaShape = 'rect';
 let currentPullMachineId = null;
 
 const GACHA_COLORS = ['#6c5ce7','#e8956a','#6ed4a8','#f87171','#fcd34d','#7dd4fc','#f9a8d4','#a78bfa'];
@@ -2453,100 +2405,45 @@ function renderGachaMachines() {
   }
   row.innerHTML = gachaMachines.map(m => {
     const owner = owners.find(o => o.id === m.ownerId);
-    const hasStock = m.items.some(it => getGachaItemStock(it) > 0);
-    const c = m.color || '#6c5ce7';
-    const cLight = c + '22';
-    const cDark  = c + 'aa';
-    const shape  = m.shape || 'rect'; // 'rect' | 'dome'
-
-    const balls = [
-      {x:-10,y:68,w:34,c:'#378add'},{x:10,y:80,w:40,c:'#854f0b'},
-      {x:40,y:68,w:32,c:'#ed93b1'},{x:62,y:80,w:36,c:'#0f6e56'},
-      {x:90,y:68,w:32,c:'#185fa5'},{x:106,y:78,w:30,c:'#993556'},
-      {x:-4,y:42,w:28,c:'#f0997b'},{x:20,y:50,w:30,c:'#5dcaa5'},
-      {x:48,y:40,w:28,c:'#d85a30'},{x:74,y:50,w:32,c:'#85b7eb'},
-      {x:100,y:42,w:27,c:'#fac775'},
-    ];
-
-    const ballsSVG = balls.map((b,i) => {
-      const angle = (i % 2 === 0 ? -1 : 1) * (8 + (i*7)%15);
-      const light = b.c + 'dd';
-      const half  = b.w / 2;
-      return `<g transform="translate(${b.x + half},${b.y + half}) rotate(${angle}) translate(${-half},${-half})">
-        <circle cx="${half}" cy="${half/2}" r="${half}" fill="${b.c}"/>
-        <ellipse cx="${half}" cy="${b.w*0.75}" rx="${half}" ry="${half*0.52}" fill="#ffffffcc"/>
-        <circle cx="${half}" cy="${half}" r="${half}" fill="none" stroke="${b.c}bb" stroke-width="0.5"/>
-      </g>`;
-    }).join('');
-
-    const glassRect = shape === 'rect'
-      ? `<rect x="1" y="1" width="130" height="110" rx="4" ry="4"
-           fill="${cLight}" stroke="${c}" stroke-width="2.5"/>`
-      : `<ellipse cx="66" cy="66" rx="65" ry="65"
-           fill="${cLight}" stroke="${c}" stroke-width="2.5"/>`;
-
-    const clipPath = shape === 'rect'
-      ? `<clipPath id="clip-${m.id}"><rect x="1" y="1" width="130" height="110" rx="4"/></clipPath>`
-      : `<clipPath id="clip-${m.id}"><ellipse cx="66" cy="66" rx="63" ry="63"/></clipPath>`;
-
-    const domeH   = shape === 'rect' ? 112 : 132;
-    const neckW   = shape === 'rect' ? 60  : 52;
-    const bodyW   = shape === 'rect' ? 140 : 110;
-    const bodyH   = 100;
-    const totalW  = '100%';
-    const totalH  = domeH + bodyH + 14;
-
-    const domeSVG = shape === 'rect'
-      ? `<svg width="100%" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
-          <defs>${clipPath}</defs>
-          <rect x="0" y="0" width="${neckW}" height="14" rx="6"
-            fill="${c}" transform="translate(${(132-neckW)/2},0)"/>
-          ${glassRect.replace('x="1" y="1"','x="1" y="13"').replace('height="110"','height="97"')}
-          <g clip-path="url(#clip-${m.id})" transform="translate(0,13)">${ballsSVG}</g>
-        </svg>`
-      : `<svg width="100%" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
-          <defs>${clipPath}</defs>
-          <rect x="${(132-neckW)/2}" y="0" width="${neckW}" height="14" rx="6" fill="${c}"/>
-          <ellipse cx="66" cy="80" rx="64" ry="60"
-            fill="${cLight}" stroke="${c}" stroke-width="2.5"/>
-          <g clip-path="url(#clip-${m.id})" transform="translate(2,16)">${ballsSVG}</g>
-        </svg>`;
-
-    const bodySVG = `<svg width="100%" height="${bodyH}" viewBox="0 0 ${bodyW} ${bodyH}" style="display:block;margin:0 auto;">
-      <rect x="0" y="0" width="${bodyW}" height="${bodyH}" rx="0 0 16 16" fill="${c}"/>
-      <rect x="0" y="${bodyH-14}" width="${bodyW}" height="14" rx="0 0 16 16" fill="${cDark}"/>
-      <circle cx="${bodyW*0.32}" cy="38" r="28" fill="${cDark}"/>
-      <circle cx="${bodyW*0.32}" cy="38" r="16" fill="#fac775"/>
-      <rect x="${bodyW*0.62}" y="18" width="22" height="22" rx="6" fill="white" opacity="0.9"/>
-      <rect x="${bodyW*0.62}" y="46" width="22" height="7" rx="3" fill="white" opacity="0.9"/>
-      <rect x="${bodyW*0.08}" y="${bodyH-20}" width="${bodyW*0.84}" height="5" rx="2" fill="${cDark}"/>
-    </svg>`;
-
+    const isEmpty = !m.items.some(it => {
+      if (it.type === 'product') {
+        const p = products.find(x => x.id === it.refId);
+        return p && p.stockQty > 0;
+      }
+      return it.qty <= 0 || it.qty > 0;
+    });
     return `
-    <div onclick="${hasStock ? `openPullModal('${m.id}')` : ''}"
-      style="width:100%;flex-shrink:0;cursor:${hasStock?'pointer':'not-allowed'};
-        opacity:${hasStock?1:0.45};filter:${hasStock?'none':'grayscale(1)'};
-        -webkit-tap-highlight-color:transparent;user-select:none;"
-      onmousedown="this.style.transform='scale(0.96)'"
-      onmouseup="this.style.transform=''"
-      onmouseleave="this.style.transform=''"
-      ontouchstart="this.style.transform='scale(0.96)'"
-      ontouchend="this.style.transform=''">
-      ${domeSVG}
-      ${bodySVG}
-      <div style="text-align:center;margin-top:8px;padding:0 4px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          ${escHtml(m.name)}
+    <div class="gacha-machine-card" style="border-top:4px solid ${m.color||'#6c5ce7'};${isEmpty?'opacity:.4;filter:grayscale(1);':''}">
+      <div class="gacha-machine-top" style="background:${m.color||'#6c5ce7'}22;">
+        <span style="font-size:48px;">🎰</span>
+      </div>
+      <div class="gacha-machine-body">
+        <div class="gacha-machine-name">${escHtml(m.name)}</div>
+        <div class="gacha-machine-owner">
+          ${owner ? `<span style="width:7px;height:7px;border-radius:50%;background:${owner.color};display:inline-block;"></span>${escHtml(owner.name)}` : '—'}
         </div>
-        <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">
-          ${owner ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;
-            background:${owner.color};margin-right:4px;vertical-align:middle;"></span>${escHtml(owner.name)} · ` : ''}฿${fmt(m.pricePerPull)} / pull
+        <div class="gacha-machine-price">฿${fmt(m.pricePerPull)} / pull</div>
+        <div class="gacha-machine-actions">
+          <button class="gacha-pull-btn" ${isEmpty?'disabled style="opacity:.5;cursor:not-allowed;"':''} onclick="${isEmpty?'':`openPullModal('${m.id}')`}">🎰 ${isEmpty?'หมด':'สุ่ม'}</button>
+          <button class="btn-icon btn-sm" onclick="editGachaMachine('${m.id}')" style="padding:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon btn-sm" onclick="deleteGachaMachine('${m.id}')" style="padding:6px;color:var(--danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
+
 function openGachaMachineModal() {
   document.getElementById('gacha-machine-edit-id').value = '';
   document.getElementById('gacha-machine-name').value = '';
@@ -2558,10 +2455,8 @@ function openGachaMachineModal() {
     {id: uid(), name:'Ultra Rare', pct:5, color:'#a855f7'},
   ];
   currentGachaItems = [];
- currentGachaColor = GACHA_COLORS[0];
-currentGachaShape = 'rect';
-renderGachaColorPicker();
-selectGachaShape('rect');
+  currentGachaColor = GACHA_COLORS[0];
+  renderGachaColorPicker();
   populateGachaOwnerDropdown();
   renderGachaRarityList();
   renderGachaItemList();
@@ -2579,9 +2474,7 @@ function editGachaMachine(id) {
   currentGachaRarities = JSON.parse(JSON.stringify(m.rarities || []));
   currentGachaItems = JSON.parse(JSON.stringify(m.items || []));
   currentGachaColor = m.color || GACHA_COLORS[0];
-  currentGachaShape = m.shape || 'rect';
   renderGachaColorPicker();
-  selectGachaShape(currentGachaShape);
   populateGachaOwnerDropdown(m.ownerId);
   renderGachaRarityList();
   renderGachaItemList();
@@ -2604,16 +2497,6 @@ function selectGachaColor(c) {
   document.querySelectorAll('#gacha-color-picker > div').forEach(d => d.style.borderColor = 'transparent');
   const el = document.getElementById('gacha-cdot-' + c.slice(1));
   if (el) el.style.borderColor = '#fff';
-}
-
-function selectGachaShape(shape) {
-  currentGachaShape = shape;
-  ['rect','dome'].forEach(s => {
-    const el = document.getElementById('shape-' + s);
-    if (!el) return;
-    el.style.borderColor = s === shape ? 'var(--accent)' : 'var(--border)';
-    el.querySelector('div').style.color = s === shape ? 'var(--accent)' : 'var(--text-dim)';
-  });
 }
 
 function populateGachaOwnerDropdown(selectedId) {
@@ -2809,7 +2692,6 @@ async function saveGachaMachine() {
   await dbPut('gachaMachines', {
     id: editId || uid(),
     name, ownerId, color: currentGachaColor,
-    shape: currentGachaShape,
     pricePerPull: price,
     rarities: currentGachaRarities,
     items: currentGachaItems
