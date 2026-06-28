@@ -917,9 +917,9 @@
     margin-top: 2px;
   }
  #gacha-machines-row > div {
-  width: calc((100vw - 32px) / 3);
+  width: calc((100vw - 48px) / 3);
   min-width: 120px;
-  max-width: 200px;
+  max-width: 240px;
   flex-shrink: 0;
 }
 </style>
@@ -2497,14 +2497,14 @@ function renderGachaMachines() {
     const totalH  = domeH + bodyH + 14;
 
     const domeSVG = shape === 'rect'
-      ? `<svg width="132" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
+      ? `<svg width="100%" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
           <defs>${clipPath}</defs>
           <rect x="0" y="0" width="${neckW}" height="14" rx="6"
             fill="${c}" transform="translate(${(132-neckW)/2},0)"/>
           ${glassRect.replace('x="1" y="1"','x="1" y="13"').replace('height="110"','height="97"')}
           <g clip-path="url(#clip-${m.id})" transform="translate(0,13)">${ballsSVG}</g>
         </svg>`
-      : `<svg width="132" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
+      : `<svg width="100%" height="${domeH}" viewBox="0 0 132 ${domeH}" style="display:block;margin:0 auto;">
           <defs>${clipPath}</defs>
           <rect x="${(132-neckW)/2}" y="0" width="${neckW}" height="14" rx="6" fill="${c}"/>
           <ellipse cx="66" cy="80" rx="64" ry="60"
@@ -2512,7 +2512,7 @@ function renderGachaMachines() {
           <g clip-path="url(#clip-${m.id})" transform="translate(2,16)">${ballsSVG}</g>
         </svg>`;
 
-    const bodySVG = `<svg width="${bodyW}" height="${bodyH}" viewBox="0 0 ${bodyW} ${bodyH}" style="display:block;margin:0 auto;">
+    const bodySVG = `<svg width="100%" height="${bodyH}" viewBox="0 0 ${bodyW} ${bodyH}" style="display:block;margin:0 auto;">
       <rect x="0" y="0" width="${bodyW}" height="${bodyH}" rx="0 0 16 16" fill="${c}"/>
       <rect x="0" y="${bodyH-14}" width="${bodyW}" height="14" rx="0 0 16 16" fill="${cDark}"/>
       <circle cx="${bodyW*0.32}" cy="38" r="28" fill="${cDark}"/>
